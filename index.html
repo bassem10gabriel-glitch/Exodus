@@ -5,374 +5,225 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>مسابقة الخروج - Exodus Competition</title>
     
-    <!-- الخطوط: أميري (تاريخي) وتجوال (عصري) -->
+    <!-- الخطوط -->
     <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- أيقونات FontAwesome -->
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        :root {
-            --sea-dark: #0f172a;
-            --sea-light: #1e3a8a;
-            --sand: #f5f5f4;
-            --gold: #fbbf24;
-            --fire: #ef4444;
-        }
-
-        body {
-            font-family: 'Tajawal', sans-serif;
-            background-color: var(--sea-dark);
-            color: white;
-            overflow-x: hidden;
-            height: 100vh;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-        }
-
+        :root { --sea-dark: #0f172a; --sea-light: #1e3a8a; --sand: #f5f5f4; --gold: #fbbf24; --fire: #ef4444; }
+        body { font-family: 'Tajawal', sans-serif; background-color: var(--sea-dark); color: white; overflow-x: hidden; height: 100vh; margin: 0; display: flex; flex-direction: column; }
         .biblical-font { font-family: 'Amiri', serif; }
         .number-en { font-family: sans-serif; direction: ltr; display: inline-block; }
 
-        /* --- خلفية شق البحر --- */
-        .red-sea-bg {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none;
-            background: radial-gradient(circle at center bottom, #2c1a0d 0%, #0f172a 60%);
-        }
-        .wave-wall {
-            position: absolute; top: 0; bottom: 0; width: 35%;
-            background: linear-gradient(90deg, rgba(15, 23, 42, 0.95), rgba(30, 58, 138, 0.7));
-            filter: url(#water); opacity: 0.9; transition: all 2s ease;
-        }
+        /* خلفية البحر */
+        .red-sea-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; background: radial-gradient(circle at center bottom, #2c1a0d 0%, #0f172a 60%); }
+        .wave-wall { position: absolute; top: 0; bottom: 0; width: 35%; background: linear-gradient(90deg, rgba(15, 23, 42, 0.95), rgba(30, 58, 138, 0.7)); filter: url(#water); opacity: 0.9; transition: all 2s ease; }
         .wave-left { left: 0; transform-origin: left; animation: swell 8s infinite ease-in-out; border-right: 2px solid rgba(255,255,255,0.1); }
         .wave-right { right: 0; transform-origin: right; animation: swell 8s infinite ease-in-out reverse; border-left: 2px solid rgba(255,255,255,0.1); }
-        
         @keyframes swell { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(1.02); } }
 
-        /* --- الكروت والترتيب --- */
+        /* الكروت */
         .competitor-card { transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); border-bottom: 1px solid rgba(255,255,255,0.05); }
-        
         .rank-1 { background: linear-gradient(90deg, rgba(239, 68, 68, 0.25), transparent); border-right: 4px solid var(--fire); }
         .rank-2 { background: linear-gradient(90deg, rgba(251, 191, 36, 0.2), transparent); border-right: 4px solid var(--gold); }
         .rank-3 { background: linear-gradient(90deg, rgba(148, 163, 184, 0.2), transparent); border-right: 4px solid #94a3b8; }
-        
         .weekly-winner-glow { animation: holyGlow 3s infinite alternate; }
         @keyframes holyGlow { from { box-shadow: inset 0 0 10px rgba(251, 191, 36, 0.2); } to { box-shadow: inset 0 0 30px rgba(251, 191, 36, 0.5); } }
-
         .glass-panel { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
         
-        /* مؤشر الحالة */
         .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-left: 5px; }
         .status-online { background-color: #22c55e; box-shadow: 0 0 8px #22c55e; }
         .status-offline { background-color: #ef4444; }
+        .status-warning { background-color: #fbbf24; box-shadow: 0 0 8px #fbbf24; }
     </style>
 </head>
 <body>
-
-    <!-- SVG فلاتر المياه -->
     <svg style="position: absolute; width: 0; height: 0;"><filter id="water"><feTurbulence type="fractalNoise" baseFrequency="0.01 0.05" numOctaves="3" result="noise" /><feDisplacementMap in="SourceGraphic" in2="noise" scale="20" /></filter></svg>
+    <div class="red-sea-bg"><div class="wave-wall wave-left"></div><div class="wave-wall wave-right"></div><div class="absolute inset-0 flex justify-center items-end opacity-30 pointer-events-none"><div class="w-1/4 h-full bg-gradient-to-t from-orange-100/20 to-transparent"></div></div></div>
+    <audio id="bgMusic" loop><source src="https://cdn.pixabay.com/download/audio/2022/08/02/audio_884fe92c21.mp3?filename=soft-ambient-116346.mp3" type="audio/mpeg"></audio>
 
-    <!-- الخلفية المتحركة -->
-    <div class="red-sea-bg">
-        <div class="wave-wall wave-left"></div>
-        <div class="wave-wall wave-right"></div>
-        <!-- الطريق في المنتصف -->
-        <div class="absolute inset-0 flex justify-center items-end opacity-30 pointer-events-none">
-            <div class="w-1/4 h-full bg-gradient-to-t from-orange-100/20 to-transparent"></div>
-        </div>
-    </div>
-
-    <!-- مشغل الموسيقى -->
-    <audio id="bgMusic" loop>
-        <source src="https://cdn.pixabay.com/download/audio/2022/08/02/audio_884fe92c21.mp3?filename=soft-ambient-116346.mp3" type="audio/mpeg">
-    </audio>
-
-    <!-- المحتوى الرئيسي -->
     <div class="relative z-10 flex flex-col h-full max-w-4xl mx-auto w-full p-4">
-        
-        <!-- الهيدر -->
         <header class="text-center py-4 relative">
             <h1 class="text-3xl md:text-5xl text-amber-400 biblical-font font-bold drop-shadow-lg mb-1">مسابقة رحلة الخروج</h1>
             <p class="text-blue-200/60 text-sm">تحديث فوري - أونلاين</p>
-            
-            <!-- زر الموسيقى -->
-            <button onclick="toggleMusic()" class="absolute top-4 left-4 text-white/50 hover:text-amber-400 transition z-50">
-                <i class="fas fa-volume-mute text-2xl" id="musicIcon"></i>
-            </button>
+            <button onclick="toggleMusic()" class="absolute top-4 left-4 text-white/50 hover:text-amber-400 transition z-50"><i class="fas fa-volume-mute text-2xl" id="musicIcon"></i></button>
         </header>
 
-        <!-- لوحة المتصدرين -->
         <main class="flex-1 overflow-hidden flex flex-col glass-panel rounded-2xl shadow-2xl mt-2 relative">
-            <!-- شريط التحميل -->
-            <div id="loadingOverlay" class="absolute inset-0 bg-slate-900/90 z-20 flex flex-col items-center justify-center">
-                <i class="fas fa-spinner fa-spin text-4xl text-amber-500 mb-4"></i>
-                <p class="text-amber-100">جاري الاتصال بقاعدة البيانات...</p>
+            <div id="loadingOverlay" class="absolute inset-0 bg-slate-900/95 z-20 flex flex-col items-center justify-center p-6 text-center">
+                <i id="loadingIcon" class="fas fa-spinner fa-spin text-4xl text-amber-500 mb-4"></i>
+                <div id="loadingMsg" class="text-amber-100 max-w-md">
+                    جاري الاتصال بقاعدة البيانات...
+                </div>
             </div>
-
             <div class="flex justify-between items-center p-4 bg-black/40 text-amber-100/70 text-sm font-bold uppercase">
                 <div class="w-16 text-center">#</div>
-                <div class="flex-1 pr-4">الفريق / المتسابق</div>
+                <div class="flex-1 pr-4">الفريق</div>
                 <div class="w-24 text-center">النقاط</div>
             </div>
-            <div id="leaderboardList" class="flex-1 overflow-y-auto custom-scroll relative">
-                <!-- سيتم ملء البيانات هنا -->
-            </div>
+            <div id="leaderboardList" class="flex-1 overflow-y-auto custom-scroll relative"></div>
         </main>
 
-        <!-- الفوتر -->
         <footer class="py-4 text-center text-xs text-white/30 flex justify-between items-center px-4">
-            <div class="flex items-center">
-                <span id="connectionDot" class="status-dot status-offline"></span>
-                <span id="connectionText">غير متصل</span>
-            </div>
+            <div class="flex items-center"><span id="connectionDot" class="status-dot status-offline"></span><span id="connectionText">غير متصل</span></div>
             <button onclick="openAdminLogin()" class="hover:text-white transition underline">لوحة القائد (Admin)</button>
         </footer>
     </div>
 
-    <!-- مودال: إعداد السيرفر (يظهر مرة واحدة فقط) -->
-    <div id="setupModal" class="fixed inset-0 bg-black z-[100] flex items-center justify-center hidden p-4">
-        <div class="bg-slate-900 border border-amber-500/50 p-6 rounded-xl max-w-lg w-full text-right shadow-2xl overflow-y-auto max-h-screen">
-            <h2 class="text-2xl text-amber-400 font-bold mb-4 text-center biblical-font">مرحباً بك في وضع الأونلاين 🌐</h2>
-            <p class="text-gray-300 text-sm mb-4 leading-relaxed">
-                لجعل الموقع يعمل والجميع في بيوتهم (دون أن تفتح جهازك)، نحتاج لربطه بخدمة تخزين مجانية من جوجل (Firebase).
-                <br><br>
-                <span class="text-amber-300 font-bold">اتبع هذه الخطوات لمرة واحدة فقط:</span>
-            </p>
-            
-            <ol class="list-decimal list-inside text-sm text-gray-400 space-y-2 mb-6 bg-black/30 p-4 rounded">
-                <li>افتح <a href="https://console.firebase.google.com/" target="_blank" class="text-blue-400 underline font-bold">Firebase Console</a> وسجل دخولك.</li>
-                <li>اضغط <strong>Create a project</strong> (سمّه أي اسم) واضغط Continue حتى ينتهي.</li>
-                <li>من القائمة الجانبية، اختر <strong>Build</strong> ثم <strong>Firestore Database</strong>.</li>
-                <li>اضغط <strong>Create Database</strong> واختر المكان (Europe مثلاً).</li>
-                <li><span class="text-red-400 font-bold">هام جداً:</span> اختر <strong>Start in test mode</strong> ثم اضغط Enable.</li>
-                <li>اضغط أيقونة الإعدادات (⚙️) بجوار Project Overview واختر Project Settings.</li>
-                <li>انزل للأسفل واضغط أيقونة الويب (</>). سمّه أي اسم واضغط Register.</li>
-                <li>سيظهر لك كود، انسخ فقط الجزء الموجود بين الأقواس <span dir="ltr" class="font-mono bg-black px-1 text-green-400">const firebaseConfig = { ... };</span></li>
-            </ol>
-
-            <textarea id="configInput" dir="ltr" class="w-full bg-black border border-gray-700 rounded p-3 text-green-400 font-mono text-xs h-32 focus:outline-none focus:border-amber-500" placeholder='ألصق الكود هنا.. مثال:
-{
-  apiKey: "AIzaSyB...",
-  authDomain: "...",
-  projectId: "...",
-  ...
-}'></textarea>
-            
-            <button onclick="saveConfig()" class="w-full mt-4 bg-amber-600 hover:bg-amber-500 text-black font-bold py-3 rounded transition shadow-lg shadow-amber-900/50">حفظ وبدء التشغيل</button>
-        </div>
-    </div>
-
-    <!-- مودال: تسجيل دخول الأدمن -->
+    <!-- Login Modal -->
     <div id="loginModal" class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center hidden">
         <div class="bg-slate-800 p-8 rounded-xl border border-amber-500/30 w-full max-w-sm text-center">
-            <h2 class="text-2xl text-amber-400 biblical-font mb-6">الدخول للتحكم</h2>
-            <input type="password" id="adminPass" placeholder="كلمة المرور" class="w-full p-3 bg-slate-900 border border-slate-700 rounded mb-4 text-center text-white focus:outline-none focus:border-amber-500">
-            <div class="flex gap-2">
-                <button onclick="closeModal('loginModal')" class="flex-1 py-2 bg-slate-700 rounded hover:bg-slate-600">إلغاء</button>
-                <button onclick="checkLogin()" class="flex-1 py-2 bg-amber-600 text-black font-bold rounded hover:bg-amber-500">دخول</button>
-            </div>
+            <h2 class="text-2xl text-amber-400 biblical-font mb-6">الدخول</h2>
+            <input type="password" id="adminPass" placeholder="1123" class="w-full p-3 bg-slate-900 border border-slate-700 rounded mb-4 text-center text-white focus:outline-none focus:border-amber-500">
+            <div class="flex gap-2"><button onclick="closeModal('loginModal')" class="flex-1 py-2 bg-slate-700 rounded">إلغاء</button><button onclick="checkLogin()" class="flex-1 py-2 bg-amber-600 text-black font-bold rounded">دخول</button></div>
         </div>
     </div>
 
-    <!-- مودال: لوحة التحكم (Admin) -->
+    <!-- Admin Modal -->
     <div id="adminModal" class="fixed inset-0 bg-black/95 z-50 flex flex-col hidden overflow-y-auto">
         <div class="p-4 md:p-8 max-w-5xl mx-auto w-full">
             <div class="flex justify-between items-center mb-8 border-b border-white/10 pb-4">
                 <h2 class="text-3xl text-amber-400 biblical-font">لوحة القائد</h2>
-                <div class="flex gap-2">
-                    <button onclick="resetConfig()" class="px-3 py-2 bg-slate-800 rounded text-xs text-gray-400 hover:text-white">إعادة ضبط السيرفر</button>
-                    <button onclick="closeModal('adminModal')" class="px-4 py-2 bg-red-900/50 hover:bg-red-600 rounded text-red-200">خروج</button>
-                </div>
+                <button onclick="closeModal('adminModal')" class="px-4 py-2 bg-red-900/50 hover:bg-red-600 rounded text-red-200">خروج</button>
             </div>
-
-            <!-- إضافة متسابق -->
             <div class="bg-slate-800/50 p-6 rounded-xl border border-white/5 mb-8">
-                <h3 class="text-xl mb-4 text-blue-200">إضافة متسابق جديد</h3>
+                <h3 class="text-xl mb-4 text-blue-200">إضافة فريق</h3>
                 <div class="flex flex-col md:flex-row gap-4 items-start">
                     <div class="w-full md:w-auto flex flex-col items-center">
                         <label for="newImgInput" class="w-16 h-16 rounded-full bg-slate-700 flex items-center justify-center cursor-pointer hover:bg-slate-600 overflow-hidden border-2 border-dashed border-slate-500">
-                            <img id="previewImg" src="" class="w-full h-full object-cover hidden">
-                            <i id="uploadIcon" class="fas fa-camera text-white/50"></i>
+                            <img id="previewImg" src="" class="w-full h-full object-cover hidden"><i id="uploadIcon" class="fas fa-camera text-white/50"></i>
                         </label>
                         <input type="file" id="newImgInput" accept="image/*" class="hidden" onchange="handleImagePreview(this)">
                     </div>
-                    <input type="text" id="newName" placeholder="الاسم" class="flex-1 bg-slate-900 border border-slate-700 p-3 rounded text-white focus:outline-none focus:border-amber-500 w-full">
-                    <input type="number" id="newPoints" placeholder="0" class="w-full md:w-24 bg-slate-900 border border-slate-700 p-3 rounded text-white text-center focus:outline-none focus:border-amber-500 number-en">
+                    <input type="text" id="newName" placeholder="الاسم" class="flex-1 bg-slate-900 border border-slate-700 p-3 rounded text-white w-full">
+                    <input type="number" id="newPoints" placeholder="0" class="w-full md:w-24 bg-slate-900 border border-slate-700 p-3 rounded text-white text-center number-en">
                     <button onclick="addCompetitor()" class="bg-green-600 hover:bg-green-500 text-white px-6 py-3 rounded font-bold w-full md:w-auto">إضافة</button>
                 </div>
             </div>
-
-            <!-- القائمة -->
             <div class="bg-slate-800/50 p-6 rounded-xl border border-white/5">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl text-blue-200">تعديل النقاط</h3>
-                    <button onclick="deleteAllData()" class="text-xs text-red-400 hover:text-red-300 underline">حذف الكل</button>
-                </div>
+                <div class="flex justify-between items-center mb-4"><h3 class="text-xl text-blue-200">النقاط</h3><button onclick="deleteAllData()" class="text-xs text-red-400 hover:text-red-300 underline">حذف الكل</button></div>
                 <div id="adminList" class="space-y-2"></div>
             </div>
-            
-            <button onclick="closeModal('adminModal')" class="mt-8 mx-auto block text-slate-400 hover:text-white">العودة للشاشة الرئيسية</button>
+            <button onclick="closeModal('adminModal')" class="mt-8 mx-auto block text-slate-400 hover:text-white">عودة</button>
         </div>
     </div>
 
-    <!-- Firebase SDKs -->
+    <!-- Firebase Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, doc, onSnapshot, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        // --- Global Variables ---
-        window.db = null;
-        window.auth = null;
-        window.competitors = [];
-        const DOC_ID = 'exodus_leaderboard_data'; // ID ثابت للمستند
+        // =================================================================
+        // تم لصق كود فايربيس الخاص بك هنا بنجاح
+        // =================================================================
         
-        // --- 1. التحقق من الإعدادات عند البدء ---
+        const manualConfig = {
+          apiKey: "AIzaSyDaiNplUIh8mFFOUmFTx-dnEC9HxeL2wF8",
+          authDomain: "kkww-54462.firebaseapp.com",
+          projectId: "kkww-54462",
+          storageBucket: "kkww-54462.firebasestorage.app",
+          messagingSenderId: "988360114007",
+          appId: "1:988360114007:web:5b64245ad1440dbb848812"
+        };
+
+        window.db = null;
+        window.competitors = [];
+        const DOC_ID = 'exodus_leaderboard_data';
+
         window.addEventListener('DOMContentLoaded', async () => {
-            const savedConfig = localStorage.getItem('exodus_firebase_config');
-            
-            if (!savedConfig) {
-                // لا يوجد إعدادات -> أظهر شاشة الإعداد
-                document.getElementById('loadingOverlay').classList.add('hidden');
-                document.getElementById('setupModal').classList.remove('hidden');
-            } else {
-                // يوجد إعدادات -> ابدأ الاتصال
+            if (!manualConfig) {
+                document.getElementById('loadingMsg').innerHTML = `<span class="text-red-400 font-bold">خطأ في الإعدادات!</span>`;
+                return;
+            }
+
+            // محاولة التهيئة
+            try {
+                const app = initializeApp(manualConfig);
+                window.db = getFirestore(app);
+                const auth = getAuth(app);
+                
+                // محاولة تسجيل الدخول
+                // قمنا بإضافة try/catch هنا خصيصاً لتجاوز خطأ عدم تفعيل تسجيل الدخول
                 try {
-                    const firebaseConfig = JSON.parse(savedConfig);
-                    initFirebase(firebaseConfig);
-                } catch (e) {
-                    alert("خطأ في ملف الإعدادات. سيتم إعادة الضبط.");
-                    localStorage.removeItem('exodus_firebase_config');
-                    location.reload();
+                    await signInAnonymously(auth);
+                    console.log("تم تسجيل الدخول بنجاح");
+                    document.getElementById('connectionDot').className = 'status-dot status-online';
+                    document.getElementById('connectionText').textContent = 'متصل (آمن)';
+                } catch (authError) {
+                    console.warn("فشل تسجيل الدخول، سنحاول الاتصال بدونه:", authError);
+                    // إذا كان الخطأ هو عدم التفعيل، سنتجاوزه ونكمل
+                    if (authError.code === 'auth/configuration-not-found' || authError.code === 'auth/operation-not-allowed') {
+                        document.getElementById('connectionDot').className = 'status-dot status-warning';
+                        document.getElementById('connectionText').textContent = 'متصل (عام)';
+                        document.getElementById('connectionText').className = 'text-amber-400';
+                        // لا نوقف التنفيذ، بل نكمل للخطوة التالية
+                    } else {
+                        // أخطاء أخرى قد تكون حرجة
+                        throw authError; 
+                    }
                 }
+
+                // بدء الاستماع للبيانات (سواء تم تسجيل الدخول أم لا)
+                // هذا سيعمل إذا كانت القواعد في فايربيس Test Mode
+                const docRef = doc(window.db, "competitions", DOC_ID);
+                
+                // إخفاء شاشة التحميل
+                document.getElementById('loadingOverlay').classList.add('hidden');
+                
+                onSnapshot(docRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        window.competitors = docSnap.data().teams || [];
+                        renderLeaderboard();
+                        if(!document.getElementById('adminModal').classList.contains('hidden')) renderAdminList();
+                    } else {
+                        // إذا لم يوجد الملف، نحاول إنشاءه
+                        setDoc(docRef, { teams: [] }).catch(e => console.error("فشل الإنشاء الأولي:", e));
+                    }
+                }, (snapshotError) => {
+                    // إذا وصلنا هنا، فهذا يعني أن القواعد تمنع القراءة بدون تسجيل دخول
+                    console.error("خطأ في جلب البيانات:", snapshotError);
+                    document.getElementById('loadingOverlay').classList.remove('hidden');
+                    document.getElementById('loadingIcon').className = "fas fa-lock text-red-500 text-4xl mb-4";
+                    document.getElementById('loadingMsg').innerHTML = `
+                        <div class="text-red-200 bg-red-900/50 p-4 rounded border border-red-500">
+                            فشل الوصول للبيانات.<br>
+                            يجب تفعيل <b>Anonymous Auth</b> في فايربيس<br>
+                            أو التأكد من أن القواعد <b>Test Mode</b>.
+                        </div>
+                    `;
+                });
+
+            } catch (error) {
+                console.error("Critical Error:", error);
+                document.getElementById('loadingMsg').innerHTML = `
+                    <span class="text-red-400 font-bold">خطأ غير متوقع: ${error.message}</span>
+                `;
             }
         });
 
-        // --- 2. دالة حفظ الإعدادات من المودال (النسخة النهائية الذكية) ---
-        window.saveConfig = function() {
-            let input = document.getElementById('configInput').value.trim();
-
-            // 1. تنظيف أولي لاسم المتغير (مثل const firebaseConfig = )
-            input = input.replace(/^(const|let|var)\s+\w+\s*=\s*/, '');
-            input = input.replace(/;$/, ''); // حذف الفاصلة المنقوطة في النهاية
-
-            // 2. البحث عن الأقواس لتحديد حدود الكائن
-            const firstBrace = input.indexOf('{');
-            const lastBrace = input.lastIndexOf('}');
-
-            if (firstBrace !== -1 && lastBrace !== -1) {
-                // استخراج ما بين القوسين فقط (شاملاً القوسين)
-                input = input.substring(firstBrace, lastBrace + 1);
-            }
-
-            try {
-                // الطريقة الذكية: بدلاً من محاولة تصحيح النص كـ JSON (وهو صعب بسبب الفواصل والأقواس)
-                // نستخدم خدعة بسيطة لقراءة كائن الجافاسكريبت مباشرة كما هو
-                // هذا السطر يقرأ النص كأنه كود برمجي ويحوله لكائن، مما يحل مشاكل الفواصل وعلامات التنصيص تلقائياً
-                const config = new Function('return ' + input)();
-                
-                // التأكد من أن الكائن يحتوي على بيانات صحيحة
-                if (!config.apiKey || !config.projectId) {
-                    throw new Error("الكود لا يحتوي على بيانات Firebase الصحيحة");
-                }
-
-                // الحفظ وإعادة التشغيل
-                localStorage.setItem('exodus_firebase_config', JSON.stringify(config));
-                document.getElementById('setupModal').classList.add('hidden');
-                document.getElementById('loadingOverlay').classList.remove('hidden');
-                location.reload();
-            } catch (e) {
-                console.error(e);
-                alert("عفواً، لم أتمكن من قراءة الكود. \nتأكد من نسخ ما بين الأقواس { } بشكل صحيح.\n\nتفاصيل الخطأ: " + e.message);
-            }
-        }
-
-        window.resetConfig = function() {
-            if(confirm("هل تريد حذف إعدادات السيرفر وإعادة إدخالها؟")) {
-                localStorage.removeItem('exodus_firebase_config');
-                location.reload();
-            }
-        }
-
-        // --- 3. تهيئة Firebase ---
-        async function initFirebase(config) {
-            try {
-                const app = initializeApp(config);
-                window.db = getFirestore(app);
-                window.auth = getAuth(app);
-
-                // تسجيل دخول مجهول (مطلوب للقراءة/الكتابة)
-                await signInAnonymously(window.auth);
-                
-                updateConnectionStatus(true);
-                document.getElementById('loadingOverlay').classList.add('hidden');
-
-                // بدء الاستماع للتغييرات (Realtime Listener)
-                startListening();
-
-            } catch (error) {
-                console.error("Firebase Error:", error);
-                alert("فشل الاتصال بالسيرفر. تأكد من صحة الكود الذي نسخته، ومن تفعيل 'Test Mode' في قاعدة البيانات.");
-                document.getElementById('loadingOverlay').classList.add('hidden');
-                document.getElementById('setupModal').classList.remove('hidden');
-            }
-        }
-
-        // --- 4. الاستماع وتحديث البيانات ---
-        function startListening() {
-            const docRef = doc(window.db, "competitions", DOC_ID);
-            
-            onSnapshot(docRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    window.competitors = docSnap.data().teams || [];
-                    renderLeaderboard();
-                    if(!document.getElementById('adminModal').classList.contains('hidden')) {
-                        renderAdminList();
-                    }
-                } else {
-                    // أول مرة: إنشاء بيانات تجريبية
-                    const sampleData = [
-                        { id: 1, name: "فريق موسى", points: 150, image: null },
-                        { id: 2, name: "فريق هارون", points: 120, image: null }
-                    ];
-                    setDoc(docRef, { teams: sampleData });
-                }
-            }, (error) => {
-                console.error("Listener Error:", error);
-                updateConnectionStatus(false);
-            });
-        }
-
-        // --- 5. دوال التعديل (Admin Actions) ---
+        // دوال الحفظ السحابي
         window.saveDataToCloud = async function() {
             if (!window.db) return;
-            // ترتيب
             window.competitors.sort((a, b) => b.points - a.points);
             try {
-                await setDoc(doc(window.db, "competitions", DOC_ID), { 
-                    teams: window.competitors 
-                });
-            } catch (e) {
-                alert("خطأ في الحفظ: " + e.message);
+                await setDoc(doc(window.db, "competitions", DOC_ID), { teams: window.competitors });
+            } catch(e) {
+                alert("فشل الحفظ: ربما لا تملك الصلاحية. تأكد من تفعيل Anonymous Auth.");
             }
         }
 
-        // --- دوال الواجهة (متاحة في window) ---
+        // دوال الواجهة
         window.addCompetitor = function() {
             const name = document.getElementById('newName').value.trim();
             if (!name) return;
-            const newTeam = { 
-                id: Date.now(), 
-                name: name, 
-                points: parseInt(document.getElementById('newPoints').value)||0, 
-                image: window.tempImageBase64 
-            };
-            window.competitors.push(newTeam);
+            window.competitors.push({ id: Date.now(), name, points: parseInt(document.getElementById('newPoints').value)||0, image: window.tempImageBase64 });
             saveDataToCloud();
-            // Reset UI
             document.getElementById('newName').value = '';
             document.getElementById('newPoints').value = '';
             window.tempImageBase64 = null;
@@ -380,74 +231,32 @@
             document.getElementById('uploadIcon').classList.remove('hidden');
         }
 
-        window.changePoints = function(id, delta) {
-            const c = window.competitors.find(x => x.id === id);
-            if(c) { c.points += delta; saveDataToCloud(); }
-        }
-
-        window.manualEditPoints = function(id, val) {
-            const c = window.competitors.find(x => x.id === id);
-            if(c) { c.points = parseInt(val)||0; saveDataToCloud(); }
-        }
-
-        window.deleteCompetitor = function(id) {
-            if(confirm('حذف؟')) {
-                window.competitors = window.competitors.filter(c => c.id !== id);
-                saveDataToCloud();
-            }
-        }
-
-        window.deleteAllData = function() {
-            if(confirm('هل أنت متأكد من حذف كل شيء؟')) {
-                window.competitors = [];
-                saveDataToCloud();
-            }
-        }
+        window.changePoints = function(id, d) { const c = window.competitors.find(x => x.id === id); if(c) { c.points += d; saveDataToCloud(); } }
+        window.manualEditPoints = function(id, v) { const c = window.competitors.find(x => x.id === id); if(c) { c.points = parseInt(v)||0; saveDataToCloud(); } }
+        window.deleteCompetitor = function(id) { if(confirm('حذف؟')) { window.competitors = window.competitors.filter(c => c.id !== id); saveDataToCloud(); } }
+        window.deleteAllData = function() { if(confirm('حذف الكل؟')) { window.competitors = []; saveDataToCloud(); } }
     </script>
 
-    <!-- Vanilla JS Logic for UI -->
     <script>
-        // Icons
+        // UI Logic
         const icons = {
             fire: `<svg class="w-8 h-8 text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 22c4.97 0 9-4.03 9-9 0-4.97-9-13-9-13S3 8.03 3 13c0 4.97 4.03 9 9 9zm0-2c-3.87 0-7-3.13-7-7 0-2.26 3.14-6.42 5.71-9.69C11.54 4.3 12 3.71 12 3.71s.46.59 1.29 1.6C15.86 8.58 19 12.74 19 13c0 3.87-3.13 7-7 7z"/></svg>`,
-            tablets: `<svg class="w-8 h-8 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M6 2h12a2 2 0 012 2v18H4V4a2 2 0 012-2zm2 4v2h2V6H8zm4 0v2h2V6h-2zm-4 4v2h2v-2H8zm4 0v2h2v-2h-2zm-4 4v2h2v-2h-2zm-4 4v2h2v-2H8zm4 0v2h2v-2h-2z"/></svg>`,
+            tablets: `<svg class="w-8 h-8 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M6 2h12a2 2 0 012 2v18H4V4a2 2 0 012-2zm2 4v2h2V6H8zm4 0v2h2V6h-2zm-4 4v2h2v-2H8zm4 0v2h2v-2h-2zm-4 4v2h2v-2H8zm4 0v2h2v-2h-2zm-4 4v2h2v-2H8zm4 0v2h2v-2h-2z"/></svg>`,
             staff: `<svg class="w-8 h-8 text-amber-600 transform rotate-12" fill="currentColor" viewBox="0 0 24 24"><path d="M5 22h2l1.5-5 .5-1.5L7 3h2l2 12.5.5 1.5L13 22h2l-2.5-7-2-13H8L6 15z"/></svg>`
         };
 
-        // Render Functions
         function renderLeaderboard() {
             const list = document.getElementById('leaderboardList');
             list.innerHTML = '';
-            
-            if (window.competitors.length === 0) {
-                list.innerHTML = '<div class="text-center text-white/50 py-10">لا يوجد متسابقين بعد</div>';
-                return;
-            }
-
+            if (window.competitors.length === 0) { list.innerHTML = '<div class="text-center text-white/50 py-10">لا يوجد متسابقين بعد</div>'; return; }
             window.competitors.forEach((c, index) => {
                 const rank = index + 1;
                 let rankClass = '', rankIcon = `<span class="text-xl font-bold number-en text-slate-500">#${rank}</span>`, glowClass = '';
-                
                 if (rank === 1) { rankClass = 'rank-1'; rankIcon = icons.fire; glowClass = 'weekly-winner-glow'; }
                 else if (rank === 2) { rankClass = 'rank-2'; rankIcon = icons.tablets; }
                 else if (rank === 3) { rankClass = 'rank-3'; rankIcon = icons.staff; }
-
                 const imgDisplay = c.image ? `<img src="${c.image}" class="w-full h-full object-cover">` : `<div class="w-full h-full bg-slate-700 flex items-center justify-center text-slate-500 font-bold text-lg">${c.name.charAt(0)}</div>`;
-
-                const html = `
-                    <div class="competitor-card flex items-center p-4 ${rankClass} ${glowClass}">
-                        <div class="w-16 flex justify-center items-center">${rankIcon}</div>
-                        <div class="w-12 h-12 rounded-full overflow-hidden border-2 border-white/20 ml-4 shadow-lg shrink-0">${imgDisplay}</div>
-                        <div class="flex-1 mr-4">
-                            <h3 class="text-lg md:text-xl font-bold text-white truncate">${c.name}</h3>
-                            ${rank === 1 ? '<span class="text-[10px] text-amber-400 font-bold animate-pulse">متصدر الأسبوع</span>' : ''}
-                        </div>
-                        <div class="w-24 text-center">
-                            <span class="text-2xl font-bold text-amber-400 number-en">${c.points}</span>
-                        </div>
-                    </div>
-                `;
-                list.insertAdjacentHTML('beforeend', html);
+                list.insertAdjacentHTML('beforeend', `<div class="competitor-card flex items-center p-4 ${rankClass} ${glowClass}"><div class="w-16 flex justify-center items-center">${rankIcon}</div><div class="w-12 h-12 rounded-full overflow-hidden border-2 border-white/20 ml-4 shadow-lg shrink-0">${imgDisplay}</div><div class="flex-1 mr-4"><h3 class="text-lg md:text-xl font-bold text-white truncate">${c.name}</h3>${rank === 1 ? '<span class="text-[10px] text-amber-400 font-bold animate-pulse">متصدر الأسبوع</span>' : ''}</div><div class="w-24 text-center"><span class="text-2xl font-bold text-amber-400 number-en">${c.points}</span></div></div>`);
             });
         }
 
@@ -455,78 +264,16 @@
             const list = document.getElementById('adminList');
             list.innerHTML = '';
             window.competitors.forEach((c) => {
-                list.insertAdjacentHTML('beforeend', `
-                    <div class="flex items-center justify-between bg-slate-900 p-3 rounded border border-slate-700">
-                        <div class="flex items-center gap-3 overflow-hidden flex-1">
-                            <div class="w-8 h-8 rounded-full bg-slate-700 overflow-hidden shrink-0">${c.image ? `<img src="${c.image}" class="w-full h-full object-cover">` : ''}</div>
-                            <span class="truncate text-sm">${c.name}</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <button onclick="changePoints(${c.id}, -5)" class="w-8 h-8 bg-slate-700 rounded hover:bg-red-900 text-red-200 number-en font-bold">-5</button>
-                            <input onchange="manualEditPoints(${c.id}, this.value)" type="number" value="${c.points}" class="w-14 bg-black border border-slate-600 rounded p-1 text-center text-amber-400 number-en text-sm">
-                            <button onclick="changePoints(${c.id}, 5)" class="w-8 h-8 bg-slate-700 rounded hover:bg-green-900 text-green-200 number-en font-bold">+5</button>
-                            <button onclick="deleteCompetitor(${c.id})" class="w-8 h-8 ml-1 text-slate-500 hover:text-red-500"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </div>
-                `);
+                list.insertAdjacentHTML('beforeend', `<div class="flex items-center justify-between bg-slate-900 p-3 rounded border border-slate-700"><div class="flex items-center gap-3 overflow-hidden flex-1"><div class="w-8 h-8 rounded-full bg-slate-700 overflow-hidden shrink-0">${c.image ? `<img src="${c.image}" class="w-full h-full object-cover">` : ''}</div><span class="truncate text-sm">${c.name}</span></div><div class="flex items-center gap-2"><button onclick="changePoints(${c.id}, -5)" class="w-8 h-8 bg-slate-700 rounded hover:bg-red-900 text-red-200 number-en font-bold">-5</button><input onchange="manualEditPoints(${c.id}, this.value)" type="number" value="${c.points}" class="w-14 bg-black border border-slate-600 rounded p-1 text-center text-amber-400 number-en text-sm"><button onclick="changePoints(${c.id}, 5)" class="w-8 h-8 bg-slate-700 rounded hover:bg-green-900 text-green-200 number-en font-bold">+5</button><button onclick="deleteCompetitor(${c.id})" class="w-8 h-8 ml-1 text-slate-500 hover:text-red-500"><i class="fas fa-trash"></i></button></div></div>`);
             });
-        }
-
-        // --- Helpers ---
-        function updateConnectionStatus(isOnline) {
-            const dot = document.getElementById('connectionDot');
-            const text = document.getElementById('connectionText');
-            if(isOnline) {
-                dot.className = 'status-dot status-online';
-                text.textContent = 'متصل بالسيرفر';
-                text.className = 'text-green-400';
-            } else {
-                dot.className = 'status-dot status-offline';
-                text.textContent = 'غير متصل';
-                text.className = 'text-red-400';
-            }
         }
 
         function openAdminLogin() { document.getElementById('loginModal').classList.remove('hidden'); }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-        
-        function checkLogin() {
-            if (document.getElementById('adminPass').value === '1123') {
-                closeModal('loginModal'); 
-                document.getElementById('adminPass').value = '';
-                document.getElementById('adminModal').classList.remove('hidden'); 
-                renderAdminList();
-            } else { alert("كلمة المرور غير صحيحة"); }
-        }
-
-        // Image Handling
+        function checkLogin() { if (document.getElementById('adminPass').value === '1123') { closeModal('loginModal'); document.getElementById('adminPass').value = ''; document.getElementById('adminModal').classList.remove('hidden'); renderAdminList(); } else { alert("كلمة المرور غير صحيحة"); } }
         window.tempImageBase64 = null;
-        window.handleImagePreview = function(input) {
-            if (input.files && input.files[0]) {
-                if(input.files[0].size > 150000) return alert("الصورة كبيرة جداً! يرجى اختيار صورة أصغر (أقل من 150KB) لضمان سرعة السيرفر.");
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    window.tempImageBase64 = e.target.result;
-                    document.getElementById('previewImg').src = window.tempImageBase64;
-                    document.getElementById('previewImg').classList.remove('hidden');
-                    document.getElementById('uploadIcon').classList.add('hidden');
-                }
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        // Music
-        function toggleMusic() {
-            const audio = document.getElementById('bgMusic');
-            const icon = document.getElementById('musicIcon');
-            if(audio.paused) { 
-                audio.play(); 
-                icon.className = 'fas fa-volume-up text-amber-400'; 
-            } else { 
-                audio.pause(); 
-                icon.className = 'fas fa-volume-mute text-white/50'; 
-            }
-        }
+        window.handleImagePreview = function(input) { if (input.files && input.files[0]) { if(input.files[0].size > 150000) return alert("صورة كبيرة جداً!"); const reader = new FileReader(); reader.onload = (e) => { window.tempImageBase64 = e.target.result; document.getElementById('previewImg').src = window.tempImageBase64; document.getElementById('previewImg').classList.remove('hidden'); document.getElementById('uploadIcon').classList.add('hidden'); }; reader.readAsDataURL(input.files[0]); } }
+        window.toggleMusic = function() { const audio = document.getElementById('bgMusic'); const icon = document.getElementById('musicIcon'); if(audio.paused) { audio.play(); icon.className = 'fas fa-volume-up text-amber-400'; } else { audio.pause(); icon.className = 'fas fa-volume-mute text-white/50'; } }
     </script>
 </body>
 </html>
