@@ -3,106 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة الصدارة - مسابقة الخروج</title>
+    <title>Exodus Leaderboard - مسابقة الخروج</title>
+    
+    <!-- Google Fonts: Cairo for Arabic, Cinzel for Titles -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;700&family=Cinzel:wght@500;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Firebase SDKs (Required for Online Sync) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
     <style>
         :root {
-            --sea-dark: #0f1c2e;
-            --sea-light: #1f3a5f;
-            --sand: #d4af37; /* Gold/Sand */
-            --sand-light: #f3e5ab;
-            --text-main: #ffffff;
-            --glass: rgba(15, 28, 46, 0.85);
-            --glass-border: rgba(212, 175, 55, 0.3);
-            --glow: 0 0 15px rgba(212, 175, 55, 0.6);
+            --sea-dark: #0f172a;
+            --sea-medium: #1e293b;
+            --sea-light: #334155;
+            --gold: #d4af37;
+            --gold-glow: #fcd34d;
+            --fire: #ef4444;
+            --sand: #fef3c7;
+            --text-main: #f8fafc;
         }
-
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
 
         * {
             box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Cairo', sans-serif;
-            user-select: none;
+            user-select: none; /* Prevent selection for app-like feel */
         }
 
         body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Cairo', sans-serif;
             background-color: var(--sea-dark);
             color: var(--text-main);
-            min-height: 100vh;
             overflow-x: hidden;
-            position: relative;
+            min-height: 100vh;
         }
 
-        /* --- RED SEA ANIMATION BACKGROUND --- */
-        .sea-background {
+        /* --- BACKGROUND ANIMATION (The Red Sea Split) --- */
+        .background-container {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             z-index: -1;
-            background: radial-gradient(circle at center, var(--sand-light) 0%, var(--sand) 20%, var(--sea-light) 40%, var(--sea-dark) 90%);
             overflow: hidden;
         }
 
-        .wave {
+        .sea-water {
             position: absolute;
             top: 0;
-            width: 50%;
             height: 100%;
-            background: linear-gradient(90deg, var(--sea-dark), var(--sea-light));
-            opacity: 0.9;
+            width: 55%; /* Overlap slightly */
+            background: linear-gradient(180deg, var(--sea-dark), var(--sea-medium));
             transition: transform 3s ease-in-out;
-            filter: blur(5px);
+            opacity: 0.9;
         }
 
-        .wave.left {
+        .sea-left {
             left: 0;
-            transform-origin: left;
-            animation: partSeaLeft 4s forwards ease-out;
+            /* Start state */
+            transform: translateX(0); 
+            border-right: 2px solid rgba(255,255,255,0.1);
+            animation: splitLeft 4s forwards 0.5s;
         }
 
-        .wave.right {
+        .sea-right {
             right: 0;
-            transform-origin: right;
-            background: linear-gradient(-90deg, var(--sea-dark), var(--sea-light));
-            animation: partSeaRight 4s forwards ease-out;
+            transform: translateX(0);
+            border-left: 2px solid rgba(255,255,255,0.1);
+            animation: splitRight 4s forwards 0.5s;
         }
 
-        /* Water shimmer effect */
-        .shimmer {
+        .sea-path {
             position: absolute;
             top: 0;
-            left: 0;
-            width: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
             height: 100%;
-            background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsMC4xKSIgc3Ryb2tlLXdpZHRoPSIxIj48cGF0aCBkPSJNMCAyMFExMCAxMCAyMCAyMFQ0MCAyMCIgLz48L3N2Zz4=');
-            animation: drift 10s linear infinite;
-            opacity: 0.3;
+            background: radial-gradient(circle at center, var(--sand) 0%, #b45309 80%);
+            box-shadow: 0 0 50px var(--gold-glow);
+            opacity: 0;
+            animation: revealPath 4s forwards 0.5s;
         }
 
-        @keyframes partSeaLeft {
-            0% { transform: scaleX(2); }
-            100% { transform: scaleX(0.2) skewX(10deg); }
+        /* Bubbles/Particles */
+        .bubble {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: rise 10s infinite ease-in;
+            bottom: -20px;
         }
 
-        @keyframes partSeaRight {
-            0% { transform: scaleX(2); }
-            100% { transform: scaleX(0.2) skewX(-10deg); }
+        @keyframes splitLeft {
+            0% { transform: translateX(0); width: 55%; }
+            100% { transform: translateX(-40%); width: 45%; } /* Move left */
+        }
+        @keyframes splitRight {
+            0% { transform: translateX(0); width: 55%; }
+            100% { transform: translateX(40%); width: 45%; } /* Move right */
+        }
+        @keyframes revealPath {
+            0% { width: 0; opacity: 0; }
+            100% { width: 30%; opacity: 0.6; }
+        }
+        @keyframes rise {
+            0% { transform: translateY(0); opacity: 0; }
+            50% { opacity: 0.5; }
+            100% { transform: translateY(-100vh); opacity: 0; }
         }
 
-        @keyframes drift {
-            from { background-position: 0 0; }
-            to { background-position: 0 100%; }
+        /* Responsive Background for Mobile */
+        @media (max-width: 768px) {
+            @keyframes revealPath { 100% { width: 90%; opacity: 0.4; } }
+            @keyframes splitLeft { 100% { transform: translateX(-80%); } }
+            @keyframes splitRight { 100% { transform: translateX(80%); } }
         }
 
-        /* --- CONTAINER --- */
-        .container {
-            max-width: 600px;
-            margin: 20px auto;
+        /* --- UI CONTAINER --- */
+        .app-container {
+            max-width: 800px;
+            margin: 0 auto;
             padding: 20px;
-            padding-bottom: 100px; /* Space for footer */
+            position: relative;
+            z-index: 10;
         }
 
         /* --- HEADER --- */
@@ -113,790 +142,760 @@
         }
 
         h1 {
+            font-family: 'Cinzel', serif;
+            color: var(--gold);
             font-size: 2.5rem;
-            color: var(--sand);
-            text-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+            margin-bottom: 5px;
         }
 
         .subtitle {
+            color: #cbd5e1;
             font-size: 1rem;
-            color: #ccc;
-            opacity: 0.8;
+            letter-spacing: 1px;
         }
 
-        /* --- CONTROLS BAR --- */
-        .controls-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            background: rgba(0,0,0,0.3);
-            border-radius: 15px;
-            margin-bottom: 20px;
-            backdrop-filter: blur(5px);
-        }
-
-        .icon-btn {
-            background: none;
-            border: none;
-            color: var(--sand);
-            font-size: 1.5rem;
+        .admin-btn {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: rgba(255,255,255,0.5);
+            padding: 8px 12px;
+            border-radius: 8px;
             cursor: pointer;
-            padding: 5px 10px;
-            transition: transform 0.2s;
+            transition: 0.3s;
         }
+        .admin-btn:hover { background: rgba(255,255,255,0.1); color: white; }
 
-        .icon-btn:hover {
-            transform: scale(1.1);
-            color: #fff;
+        /* --- AUDIO PLAYER --- */
+        .audio-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 10px;
         }
+        .music-btn {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.3s;
+        }
+        .music-btn:hover { box-shadow: 0 0 10px var(--gold); transform: scale(1.1); }
 
-        /* --- LEADERBOARD LIST --- */
+        /* --- LEADERBOARD --- */
         .leaderboard {
-            list-style: none;
             display: flex;
             flex-direction: column;
             gap: 15px;
+            padding-bottom: 100px; /* Space for fab */
         }
 
         .card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 15px;
             display: flex;
             align-items: center;
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
-            border-radius: 15px;
-            padding: 15px;
+            justify-content: space-between;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative;
             overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
 
         .card:hover {
-            transform: translateY(-3px);
-            border-color: var(--sand);
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.1);
         }
 
-        /* Rank 1 Styling */
-        .card.rank-1 {
-            background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), var(--glass));
-            border: 2px solid var(--sand);
-            box-shadow: var(--glow);
+        /* Top 3 Styling */
+        .rank-1 {
+            border: 2px solid var(--gold);
+            background: linear-gradient(90deg, rgba(212,175,55,0.1), rgba(0,0,0,0));
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
         }
-        
-        /* Rank Indicator / Icon */
-        .rank-icon {
-            width: 40px;
-            height: 40px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        .rank-1::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: shimmer 2s infinite;
+        }
+        .rank-2 { border: 1px solid #c0c0c0; }
+        .rank-3 { border: 1px solid #cd7f32; }
+
+        @keyframes shimmer {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        /* Card Content */
+        .rank-badge {
             font-weight: bold;
             font-size: 1.2rem;
-            margin-left: 15px;
-            color: var(--sand);
+            width: 40px;
+            text-align: center;
+            color: rgba(255,255,255,0.7);
         }
 
-        .rank-icon svg {
-            width: 100%;
-            height: 100%;
-            fill: var(--sand);
-            filter: drop-shadow(0 0 5px rgba(255,215,0,0.5));
+        .participant-info {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+            gap: 15px;
+            margin-right: 10px; /* RTL spacing */
         }
 
-        /* Profile Image */
         .avatar {
-            width: 60px;
-            height: 60px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             object-fit: cover;
-            border: 2px solid var(--sand);
-            margin-left: 15px;
-            background-color: #000;
+            border: 2px solid rgba(255,255,255,0.2);
+            background-color: #1e293b;
         }
 
-        /* Name */
-        .info {
-            flex-grow: 1;
-            text-align: right;
+        .rank-1 .avatar { border-color: var(--gold); }
+
+        .name-container {
+            display: flex;
+            flex-direction: column;
         }
 
         .name {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 700;
         }
 
-        /* Points */
+        .title-badge {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.6);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
         .points-container {
             text-align: center;
             min-width: 60px;
         }
 
         .points {
+            font-family: 'Cinzel', serif;
             font-size: 1.5rem;
             font-weight: bold;
-            color: var(--sand);
-            font-family: 'Arial', sans-serif; /* Force English Numbers */
-            direction: ltr;
+            color: var(--gold);
         }
 
         .points-label {
             font-size: 0.7rem;
-            color: #aaa;
+            color: rgba(255,255,255,0.5);
         }
 
-        /* --- ADMIN PANEL --- */
-        #admin-panel {
-            display: none; /* Hidden by default */
-            background: rgba(0, 0, 0, 0.9);
-            border: 2px solid var(--sand);
-            padding: 20px;
-            border-radius: 15px;
-            margin-top: 20px;
-            animation: fadeIn 0.5s;
+        /* Top 3 Icons */
+        .icon-overlay {
+            color: var(--gold);
+            font-size: 1.2rem;
         }
 
-        .admin-controls input, .admin-controls button {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            border: 1px solid #444;
-            font-size: 1rem;
-        }
-
-        .admin-controls input[type="text"], 
-        .admin-controls input[type="number"] {
-            background: #222;
-            color: white;
-            font-family: 'Arial', sans-serif; /* Input numbers in English */
+        /* --- ADMIN CONTROLS (Hidden by default) --- */
+        .admin-controls {
+            display: none; /* Flex when active */
+            gap: 10px;
+            margin-right: 15px;
         }
         
-        .admin-controls input[type="file"] {
-            background: #333;
-            color: #ccc;
-        }
-
-        .btn-add {
-            background: var(--sand);
-            color: #000;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .btn-reset {
-            background: #8b0000;
-            color: white;
-            cursor: pointer;
-            margin-top: 20px;
-        }
-
-        .edit-controls {
-            display: none; /* Visible only to admin */
-            margin-right: 10px;
-            gap: 5px;
-        }
-
-        .btn-sm {
-            padding: 5px 10px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            border-radius: 5px;
+        .btn-circle {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
             border: none;
-        }
-        .btn-edit { background: #4CAF50; color: white; }
-        .btn-del { background: #f44336; color: white; }
-
-        /* --- NOTIFICATION TOAST --- */
-        #toast {
-            visibility: hidden;
-            min-width: 250px;
-            background-color: #333;
-            color: #fff;
-            text-align: center;
-            border-radius: 8px;
-            padding: 16px;
-            position: fixed;
-            z-index: 2000;
-            left: 50%;
-            bottom: 30px;
-            transform: translateX(-50%);
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
-            border: 1px solid var(--sand);
-        }
-
-        #toast.show {
-            visibility: visible;
-            animation: fadein 0.5s, fadeout 0.5s 2.5s;
-        }
-
-        @keyframes fadein {
-            from {bottom: 0; opacity: 0;}
-            to {bottom: 30px; opacity: 1;}
-        }
-
-        @keyframes fadeout {
-            from {bottom: 30px; opacity: 1;}
-            to {bottom: 0; opacity: 0;}
-        }
-
-        /* --- MODAL --- */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.8);
-            justify-content: center;
+            cursor: pointer;
+            display: flex;
             align-items: center;
+            justify-content: center;
+            color: white;
+            transition: 0.2s;
+        }
+        .btn-add { background: #10b981; }
+        .btn-sub { background: #ef4444; }
+        .btn-edit { background: #3b82f6; }
+        .btn-del { background: #64748b; }
+
+        .host-toolbar {
+            display: none; /* Block when admin */
+            background: #1e293b;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid var(--gold);
         }
 
-        .modal-content {
-            background: var(--sea-dark);
-            border: 1px solid var(--sand);
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
+        .host-toolbar h3 { margin: 0 0 10px 0; color: var(--gold); font-size: 1rem; }
+        
+        .toolbar-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .action-btn {
+            background: var(--sea-light);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+        }
+        .action-btn:hover { background: #475569; }
+        .btn-primary { background: var(--gold); color: #000; font-weight: bold; }
+        .btn-primary:hover { background: #b5932b; }
+        .btn-danger { background: #7f1d1d; color: #fca5a5; }
+
+        /* --- MODALS --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal {
+            background: var(--sea-medium);
+            padding: 25px;
+            border-radius: 16px;
             width: 90%;
             max-width: 400px;
+            border: 1px solid var(--gold);
+            text-align: center;
+            position: relative;
         }
 
-        /* --- CONFIG ERROR MESSAGE --- */
-        .config-error {
-            text-align: center; 
-            color: #ff8888; 
-            padding: 20px; 
-            direction: rtl; 
-            line-height: 1.8; 
-            border: 2px dashed #ff4444; 
-            background: rgba(0,0,0,0.8); 
-            border-radius: 10px;
-            margin-top: 20px;
+        .modal h2 { margin-top: 0; color: var(--gold); }
+
+        .input-group {
+            margin-bottom: 15px;
+            text-align: right;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        .input-group label { display: block; margin-bottom: 5px; font-size: 0.9rem; }
+        
+        input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #475569;
+            background: #0f172a;
+            color: white;
+            font-family: 'Cairo', sans-serif;
         }
 
-        /* Responsive */
-        @media (max-width: 480px) {
-            h1 { font-size: 1.8rem; }
-            .card { padding: 10px; }
-            .avatar { width: 50px; height: 50px; }
-            .name { font-size: 1rem; }
+        .file-upload {
+            border: 2px dashed #475569;
+            padding: 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 15px;
         }
+        .file-upload:hover { border-color: var(--gold); }
+        
+        .modal-close {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: none;
+            border: none;
+            color: #64748b;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
     </style>
 </head>
 <body>
 
-    <!-- Background Elements -->
-    <div class="sea-background">
-        <div class="shimmer"></div>
-        <div class="wave left"></div>
-        <div class="wave right"></div>
-    </div>
-
-    <!-- Audio Element (Hidden) -->
+    <!-- Audio Element -->
     <audio id="bgMusic" loop>
-        <source src="https://cdn.pixabay.com/download/audio/2022/03/24/audio_c8c8a73467.mp3?filename=calm-sea-waves-115599.mp3" type="audio/mpeg">
+        <!-- Using a free copyright calm ocean/ambient track placeholder -->
+        <source src="https://cdn.pixabay.com/download/audio/2022/03/09/audio_822ca8b438.mp3?filename=calm-ocean-waves-19632.mp3" type="audio/mp3">
     </audio>
 
-    <div class="container">
-        
-        <!-- Controls Bar -->
-        <div class="controls-bar">
-            <!-- Admin Login Button -->
-            <button class="icon-btn" onclick="toggleLoginModal()" title="دخول المسؤول">🔒</button>
-            
-            <!-- Audio Controls -->
-            <div>
-                <button class="icon-btn" onclick="adjustVolume(-0.1)">🔉</button>
-                <button class="icon-btn" id="playBtn" onclick="toggleMusic()">▶</button>
-                <button class="icon-btn" onclick="adjustVolume(0.1)">🔊</button>
+    <!-- Background Animation -->
+    <div class="background-container">
+        <div class="sea-path"></div>
+        <div class="sea-water sea-left"></div>
+        <div class="sea-water sea-right"></div>
+        <!-- Bubbles generated by JS -->
+        <div id="bubbles"></div>
+    </div>
+
+    <div class="app-container">
+        <header>
+            <button class="admin-btn" onclick="openLoginModal()"><i class="fas fa-lock"></i> دخول المشرف</button>
+            <div class="audio-controls">
+                <button class="music-btn" onclick="toggleMusic()" id="musicBtn"><i class="fas fa-play"></i></button>
+            </div>
+            <h1>مسابقة العبور</h1>
+            <div class="subtitle">Exodus - Moses & The Red Sea</div>
+        </header>
+
+        <!-- Admin Toolbar (Visible only after login) -->
+        <div class="host-toolbar" id="hostToolbar">
+            <h3><i class="fas fa-crown"></i> لوحة تحكم القائد (المشرف)</h3>
+            <div class="toolbar-grid">
+                <button class="action-btn btn-primary" onclick="openAddModal()">
+                    <i class="fas fa-user-plus"></i> إضافة متسابق
+                </button>
+                <button class="action-btn btn-danger" onclick="confirmReset()">
+                    <i class="fas fa-trash-alt"></i> حذف الجميع
+                </button>
+                <button class="action-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> خروج
+                </button>
+            </div>
+            <div style="margin-top: 10px; font-size: 0.8rem; color: #94a3b8;">
+                * التغييرات تظهر فوراً لجميع الأجهزة المتصلة (إذا تم تفعيل الوضع الأونلاين).
             </div>
         </div>
 
-        <header>
-            <h1>مسابقة العبور</h1>
-            <p class="subtitle">"الرَّبُّ يُقَاتِلُ عَنْكُمْ وَأَنْتُمْ تَصْمُتُونَ" (خروج 14: 14)</p>
-        </header>
-
-        <!-- Leaderboard -->
-        <ul id="leaderboard-list" class="leaderboard">
-            <li style="text-align:center; color:#888;">جاري بدء الاتصال...</li>
-        </ul>
-
-        <!-- Admin Panel (Hidden) -->
-        <div id="admin-panel" class="admin-controls">
-            <h2 style="color:var(--sand); margin-bottom:15px; text-align:center;">لوحة التحكم</h2>
-            
-            <input type="text" id="newName" placeholder="اسم المتسابق">
-            <input type="number" id="newPoints" placeholder="النقاط (0-9)">
-            
-            <!-- File Upload -->
-            <label style="display:block; color:#ccc; margin-bottom:5px; font-size:0.9rem;">صورة (اختياري)</label>
-            <input type="file" id="newImage" accept="image/*">
-
-            <button class="btn-add" id="addBtn"> + إضافة متسابق</button>
-            
-            <hr style="border-color:#444; margin: 20px 0;">
-            
-            <button class="btn-add" style="background:#446688; margin-bottom:10px;" id="seedBtn">📥 إضافة بيانات تجريبية</button>
-            <button class="btn-reset" id="resetBtn">⚠ حذف جميع البيانات</button>
-            <button class="btn-add" style="background:#555; color:white; margin-top:10px;" onclick="logout()">تسجيل خروج</button>
-        </div>
-
-    </div>
-
-    <!-- Login Modal -->
-    <div id="loginModal" class="modal">
-        <div class="modal-content">
-            <h3 style="color:var(--sand); margin-bottom:15px;">دخول المسؤول</h3>
-            <input type="password" id="adminPass" placeholder="كلمة المرور" class="admin-controls" style="width:100%; padding:10px; margin-bottom:10px; background:#222; border:1px solid #555; color:white;">
-            <button class="btn-add" onclick="checkLogin()">دخول</button>
-            <button class="btn-sm" style="background:transparent; color:#888; margin-top:10px;" onclick="document.getElementById('loginModal').style.display='none'">إلغاء</button>
+        <div class="leaderboard" id="leaderboardList">
+            <!-- Items rendered by JS -->
+            <div style="text-align:center; padding: 20px; color: #aaa;">جاري تحميل البيانات...</div>
         </div>
     </div>
 
-    <!-- Toast Notification -->
-    <div id="toast">تمت العملية بنجاح</div>
+    <!-- MODAL: Login -->
+    <div class="modal-overlay" id="loginModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('loginModal')">&times;</button>
+            <h2>دخول المشرف</h2>
+            <p>أدخل الرمز السري للتعديل</p>
+            <input type="password" id="adminPass" placeholder="كلمة السر (1123)" dir="ltr" style="text-align: center;">
+            <br><br>
+            <button class="action-btn btn-primary" style="width:100%" onclick="checkLogin()">دخول</button>
+        </div>
+    </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, deleteDoc, updateDoc, doc, onSnapshot, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    <!-- MODAL: Add/Edit Participant -->
+    <div class="modal-overlay" id="participantModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('participantModal')">&times;</button>
+            <h2 id="modalTitle">إضافة متسابق</h2>
+            <input type="hidden" id="editId">
+            
+            <div class="input-group">
+                <label>الاسم</label>
+                <input type="text" id="pName" placeholder="مثال: يوسف، مريم...">
+            </div>
 
-        // ==========================================================
-        //         تم إضافة المفتاح الخاص بك بنجاح
-        // ==========================================================
+            <div class="input-group">
+                <label>النقاط</label>
+                <input type="number" id="pPoints" placeholder="0" value="0">
+            </div>
+
+            <div class="file-upload" onclick="document.getElementById('pImageInput').click()">
+                <i class="fas fa-camera fa-2x"></i><br>
+                <span>اضغط لرفع صورة</span>
+                <input type="file" id="pImageInput" accept="image/*" style="display: none" onchange="previewImage()">
+            </div>
+            <img id="imagePreview" src="" style="width: 60px; height: 60px; border-radius: 50%; display: none; margin: 0 auto 15px auto;">
+
+            <button class="action-btn btn-primary" style="width:100%" onclick="saveParticipant()">حفظ</button>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // CONFIGURATION & SETUP
+        // ==========================================
         
-        const MANUAL_CONFIG = {
-            apiKey: "AIzaSyBg6pe1iZkOSFV_mcKuhCkLZALNn3qAuo4",
-            authDomain: "church-competition-a50f2.firebaseapp.com",
-            projectId: "church-competition-a50f2",
-            storageBucket: "church-competition-a50f2.firebasestorage.app",
-            messagingSenderId: "137553482984",
-            appId: "1:137553482984:web:e58d24e5c3d2323ef7655d"
+        // 1. Storage Mode:
+        // Set to 'LOCAL' for single device (uses localStorage).
+        // Set to 'FIREBASE' for multiple devices (real-time sync).
+        const STORAGE_MODE = 'LOCAL'; 
+
+        // 2. Firebase Config (REQUIRED if STORAGE_MODE is 'FIREBASE')
+        // Create a project at console.firebase.google.com -> Add Web App -> Copy config here.
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "SENDER_ID",
+            appId: "APP_ID"
         };
 
-        let firebaseConfig, appId;
+        // ==========================================
+        // STATE MANAGEMENT
+        // ==========================================
+        let competitors = [];
+        let isAdmin = false;
+        let db = null;
+        const COLLECTION_NAME = 'exodus_competitors';
 
-        // --- محاولة الاتصال والتحقق من الإعدادات ---
-        try {
-            if (typeof __firebase_config !== 'undefined') {
-                // نحن داخل بيئة المعاينة (Canvas) - يعمل تلقائياً
-                firebaseConfig = JSON.parse(__firebase_config);
-                appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-            } else if (MANUAL_CONFIG) {
-                // المستخدم قام بإضافة الإعدادات يدوياً - ممتاز!
-                firebaseConfig = MANUAL_CONFIG;
-                appId = "custom-church-app"; 
-            } else {
-                // لا توجد إعدادات!
-                throw new Error("Missing Config");
-            }
-
-            // بدء التطبيق إذا وجدت الإعدادات
-            const app = initializeApp(firebaseConfig);
-            const auth = getAuth(app);
-            const db = getFirestore(app);
-            
-            let currentUser = null;
-            let competitors = [];
-            let unsubscribe = null;
-
-            startApp(auth, db);
-
-        } catch (e) {
-            // عرض رسالة خطأ واضحة للمستخدم في حال نسيان الكود
-            const list = document.getElementById('leaderboard-list');
-            list.innerHTML = `
-                <div class="config-error">
-                    <h3>⚠️ تنبيه: الموقع غير متصل</h3>
-                    <p>لكي يعمل هذا الرابط، تحتاج إلى إضافة "مفتاح الربط" (Firebase Config) في ملف الكود.</p>
-                    <p style="font-size:0.9rem; color:#ccc;">
-                        1. افتح ملف HTML بمحرر نصوص.<br>
-                        2. ابحث عن السطر: <code>const MANUAL_CONFIG = null;</code><br>
-                        3. استبدل <code>null</code> بإعدادات مشروعك من Firebase Console.
-                    </p>
-                </div>
-            `;
-            console.error("Firebase Config Missing. Please edit the file and add MANUAL_CONFIG.");
-        }
-
-        // --- CONSTANTS ---
-        const ADMIN_PASS = "1123";
-        const ICON_FIRE = `<svg viewBox="0 0 24 24"><path d="M12,22c4.97,0,9-4.03,9-9c0-4.97-9-13-9-13S3,8.03,3,13C3,17.97,7.03,22,12,22z M12,6c0,0,6,7,6,10.5c0,3.03-2.69,5.5-6,5.5s-6-2.47-6-5.5C6,13,12,6,12,6z M12,10.5c0,0,2.5,2.5,2.5,5c0,1.38-1.12,2.5-2.5,2.5s-2.5-1.12-2.5-2.5C9.5,13,12,10.5,12,10.5z" fill="#ff4500"></path><path d="M12,17c-0.55,0-1-0.45-1-1c0-2,2-4,2-4s-1,2-1,4C12,16.55,11.55,17,12,17z" fill="#ffd700"></path></svg>`;
-        const ICON_TABLETS = `<svg viewBox="0 0 24 24"><path d="M19,2h-5.5C12.12,2,11,3.12,11,4.5V20h8c1.1,0,2-0.9,2-2V4C21,2.9,20.1,2,19,2z M6,20h4.5V4.5C10.5,3.12,9.38,2,8,2H5C3.9,2,3,2.9,3,4v14C3,19.1,3.9,20,6,20z" fill="#ccc"></path></svg>`;
-        const ICON_STAFF = `<svg viewBox="0 0 24 24"><path d="M18.5,2C16.57,2,15,3.57,15,5.5c0,0.48,0.09,0.94,0.26,1.36L6,19v3h2l8.72-11.63C16.89,10.74,17.17,11,17.5,11c1.93,0,3.5-1.57,3.5-3.5S19.43,2,17.5,2H18.5z" transform="rotate(-45 12 12)" fill="#8b4513"></path></svg>`;
-
-        // Sample data for seeding
+        // Placeholder data (Used only on first load/reset)
         const SAMPLE_DATA = [
-            { name: "موسى النبي", points: 1500, image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Moses" },
-            { name: "هارون الكاهن", points: 1200, image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Aaron" },
-            { name: "مريم النبية", points: 1150, image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Miriam" }
+            { id: '1', name: 'موسى النبي', points: 150, image: 'https://cdn-icons-png.flaticon.com/512/3024/3024607.png' },
+            { id: '2', name: 'هارون', points: 120, image: 'https://cdn-icons-png.flaticon.com/512/3024/3024593.png' },
+            { id: '3', name: 'مريم', points: 135, image: 'https://cdn-icons-png.flaticon.com/512/4140/4140047.png' },
+            { id: '4', name: 'يشوع', points: 90, image: 'https://cdn-icons-png.flaticon.com/512/4140/4140048.png' }
         ];
 
-        async function startApp(auth, db) {
-            const list = document.getElementById('leaderboard-list');
-            list.innerHTML = '<li style="text-align:center; color:#888;">جاري الاتصال: 1. التحقق من المستخدم...</li>';
-
-            const initAuth = async () => {
+        // ==========================================
+        // INITIALIZATION
+        // ==========================================
+        window.onload = function() {
+            initBubbles();
+            
+            if (STORAGE_MODE === 'FIREBASE') {
                 try {
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                } catch (error) {
-                    console.error("Auth Error:", error);
-                    if (error.code === 'auth/admin-restricted-operation' || error.code === 'auth/operation-not-allowed') {
-                         list.innerHTML = `
-                            <li style="text-align:center; color:#ff6b6b; direction:rtl; padding:20px; border:1px dashed red;">
-                                <strong>⚠️ خطوة ناقصة!</strong><br>
-                                خدمة "تسجيل الدخول" مغلقة في Firebase.<br><br>
-                                1. اذهب لـ Firebase Console > Build > Authentication<br>
-                                2. اضغط Get Started<br>
-                                3. اختر <strong>Anonymous</strong> واضغط Enable (تفعيل)
-                            </li>
-                        `;
-                    } else {
-                        list.innerHTML = `<li style="text-align:center; color:#ff6b6b;">خطأ في تسجيل الدخول:<br>${error.message}</li>`;
-                    }
+                    firebase.initializeApp(firebaseConfig);
+                    db = firebase.firestore();
+                    console.log("Firebase initialized");
+                    initRealtimeListener();
+                } catch (e) {
+                    alert("خطأ في الاتصال: تأكد من وضع إعدادات Firebase في الكود.");
+                    console.error(e);
+                    // Fallback
+                    loadFromLocal();
                 }
-            };
+            } else {
+                loadFromLocal();
+            }
+        };
 
-            // Call auth function
-            initAuth();
-
-            onAuthStateChanged(auth, (user) => {
-                if (user) {
-                    window.currentUser = user;
-                    list.innerHTML = '<li style="text-align:center; color:#888;">جاري الاتصال: 2. جلب البيانات...</li>';
-                    setupRealtimeListener(db);
-                }
-            });
+        // --- Data Loading Logic ---
+        function loadFromLocal() {
+            const stored = localStorage.getItem('exodusData');
+            if (stored) {
+                competitors = JSON.parse(stored);
+            } else {
+                competitors = [...SAMPLE_DATA]; // Load samples
+                saveData();
+            }
+            renderLeaderboard();
         }
 
-        // --- FIRESTORE LISTENER ---
-        let competitors = [];
-        let unsubscribe = null;
-
-        function setupRealtimeListener(db) {
-            const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'competitors');
-            
-            // Unsubscribe from previous listener if exists
-            if (unsubscribe) unsubscribe();
-
-            unsubscribe = onSnapshot(colRef, (snapshot) => {
+        function initRealtimeListener() {
+            db.collection(COLLECTION_NAME).onSnapshot((snapshot) => {
                 competitors = [];
-                snapshot.forEach(doc => {
+                snapshot.forEach((doc) => {
                     competitors.push({ id: doc.id, ...doc.data() });
                 });
                 renderLeaderboard();
-            }, (error) => {
-                console.error("Error getting documents: ", error);
-                const list = document.getElementById('leaderboard-list');
-                
-                let errorMsg = "حدث خطأ في الاتصال بالبيانات.";
-                if (error.code === 'permission-denied') {
-                    errorMsg = "لا تملك صلاحية الوصول (Permission Denied).<br>تأكد من أن قاعدة البيانات في وضع Test Mode.";
-                }
-
-                list.innerHTML = `
-                    <li style="text-align:center; color:#ff6b6b; padding:10px;">
-                        ${errorMsg}<br>
-                        <small style="color:#aaa;">${error.code}</small>
-                    </li>`;
             });
-            
-            // Expose DB actions to window for UI buttons
-            window.dbInstance = db;
         }
 
-        // --- RENDER LOGIC ---
+        // --- Data Saving Logic ---
+        function saveData() {
+            if (STORAGE_MODE === 'LOCAL') {
+                localStorage.setItem('exodusData', JSON.stringify(competitors));
+                renderLeaderboard();
+            } else {
+                // In Firebase mode, save functions handle DB calls directly
+            }
+        }
+
+        // ==========================================
+        // RENDERING
+        // ==========================================
         function renderLeaderboard() {
-            const list = document.getElementById('leaderboard-list');
+            const list = document.getElementById('leaderboardList');
             list.innerHTML = '';
 
-            if (competitors.length === 0) {
-                list.innerHTML = '<li style="text-align:center; color:#888; padding:20px;">لا يوجد متسابقين حالياً.<br>يمكن للمسؤول إضافة متسابقين.</li>';
-                return;
-            }
-
-            // Sort by points descending
+            // Sort: High to Low
             competitors.sort((a, b) => b.points - a.points);
 
-            competitors.forEach((comp, index) => {
-                const li = document.createElement('li');
-                li.className = `card ${index === 0 ? 'rank-1' : ''}`;
-                
-                // Determine Icon
-                let iconHtml = `<span style="font-family:Arial; opacity:0.5;">#${index + 1}</span>`;
-                if (index === 0) iconHtml = ICON_FIRE;
-                if (index === 1) iconHtml = ICON_TABLETS;
-                if (index === 2) iconHtml = ICON_STAFF;
-
-                // Buttons (Only visible if admin mode is ON globally)
-                const isAdminVisible = document.getElementById('admin-panel').style.display === 'block';
-                
-                let controlsHtml = '';
-                if (isAdminVisible) {
-                    controlsHtml = `
-                        <div class="edit-controls" style="display:flex">
-                            <button class="btn-sm btn-edit" data-id="${comp.id}" data-name="${comp.name}" data-points="${comp.points}">✎</button>
-                            <button class="btn-sm btn-del" data-id="${comp.id}">🗑</button>
-                        </div>
-                    `;
-                }
-
-                li.innerHTML = `
-                    ${controlsHtml}
-                    <div class="rank-icon">${iconHtml}</div>
-                    <img src="${comp.image || 'https://via.placeholder.com/60?text=?'}" class="avatar" alt="${comp.name}" onerror="this.src='https://via.placeholder.com/60?text=?'">
-                    <div class="info">
-                        <div class="name">${comp.name}</div>
-                    </div>
-                    <div class="points-container">
-                        <div class="points">${comp.points}</div>
-                        <div class="points-label">نقاط</div>
-                    </div>
-                `;
-                list.appendChild(li);
-            });
-
-            // Re-attach event listeners
-            document.querySelectorAll('.btn-del').forEach(btn => {
-                btn.addEventListener('click', () => deleteCompetitor(window.dbInstance, btn.getAttribute('data-id')));
-            });
-            document.querySelectorAll('.btn-edit').forEach(btn => {
-                btn.addEventListener('click', () => editCompetitor(window.dbInstance, btn.getAttribute('data-id'), btn.getAttribute('data-name'), btn.getAttribute('data-points')));
-            });
-        }
-
-        // --- ADMIN OPERATIONS ---
-        
-        // 1. Add Competitor
-        document.getElementById('addBtn').addEventListener('click', async () => {
-            if (!window.dbInstance) return showToast("انتظر الاتصال بقاعدة البيانات");
-            
-            const name = document.getElementById('newName').value;
-            const points = parseInt(document.getElementById('newPoints').value);
-            const fileInput = document.getElementById('newImage');
-
-            if (!name || isNaN(points)) {
-                showToast("يرجى إدخال الاسم والنقاط");
+            if (competitors.length === 0) {
+                list.innerHTML = '<div style="text-align:center; padding:20px;">لا يوجد متسابقين حالياً</div>';
                 return;
             }
 
-            showToast("جاري الإضافة...");
-            
-            let imageUrl = "";
+            competitors.forEach((p, index) => {
+                const rank = index + 1;
+                let rankClass = '';
+                let icon = '';
+                let glowEffect = '';
 
-            if (fileInput.files && fileInput.files[0]) {
-                try {
-                    imageUrl = await resizeImage(fileInput.files[0]);
-                } catch (e) {
-                    console.error(e);
-                    showToast("خطأ في معالجة الصورة");
-                    return;
+                // Theme Logic for Top 3
+                if (rank === 1) {
+                    rankClass = 'rank-1';
+                    icon = '<i class="fas fa-staff-snake icon-overlay" title="عصا موسى"></i> <span class="title-badge">قائد العبور</span>';
+                } else if (rank === 2) {
+                    rankClass = 'rank-2';
+                    icon = '<i class="fas fa-tablet-alt icon-overlay" title="لوحي الشريعة"></i>';
+                } else if (rank === 3) {
+                    rankClass = 'rank-3';
+                    icon = '<i class="fas fa-fire icon-overlay" title="عمود النار"></i>';
+                }
+
+                const div = document.createElement('div');
+                div.className = `card ${rankClass}`;
+                div.innerHTML = `
+                    <div class="participant-info">
+                        <div class="rank-badge">${rank}</div>
+                        <img src="${p.image || 'https://via.placeholder.com/50'}" class="avatar" alt="${p.name}">
+                        <div class="name-container">
+                            <span class="name">${p.name}</span>
+                            <span class="title-badge">${icon}</span>
+                        </div>
+                    </div>
+
+                    <div class="points-container">
+                        <div class="points">${p.points}</div>
+                        <div class="points-label">نقاط</div>
+                    </div>
+
+                    <div class="admin-controls" style="display: ${isAdmin ? 'flex' : 'none'}">
+                        <button class="btn-circle btn-sub" onclick="updatePoints('${p.id}', -10)">-10</button>
+                        <button class="btn-circle btn-add" onclick="updatePoints('${p.id}', 10)">+10</button>
+                        <button class="btn-circle btn-edit" onclick="editParticipant('${p.id}')"><i class="fas fa-pen"></i></button>
+                        <button class="btn-circle btn-del" onclick="deleteParticipant('${p.id}')"><i class="fas fa-trash"></i></button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        // ==========================================
+        // ADMIN ACTIONS
+        // ==========================================
+        
+        function openLoginModal() {
+            document.getElementById('loginModal').style.display = 'flex';
+        }
+
+        function checkLogin() {
+            const pass = document.getElementById('adminPass').value;
+            if (pass === '1123') {
+                isAdmin = true;
+                document.getElementById('hostToolbar').style.display = 'block';
+                document.querySelector('.admin-btn').style.display = 'none'; // Hide login btn
+                closeModal('loginModal');
+                renderLeaderboard(); // Re-render to show controls
+                alert('مرحباً أيها القائد. يمكنك الآن تعديل النتائج.');
+            } else {
+                alert('كلمة المرور خاطئة');
+            }
+        }
+
+        function logout() {
+            isAdmin = false;
+            document.getElementById('hostToolbar').style.display = 'none';
+            document.querySelector('.admin-btn').style.display = 'block';
+            renderLeaderboard();
+        }
+
+        function confirmReset() {
+            if(confirm("هل أنت متأكد؟ سيتم حذف جميع المتسابقين!")) {
+                if (STORAGE_MODE === 'LOCAL') {
+                    competitors = [];
+                    saveData();
+                } else {
+                    // Firebase Delete All (Batch)
+                    competitors.forEach(p => {
+                        db.collection(COLLECTION_NAME).doc(p.id).delete();
+                    });
+                }
+            }
+        }
+
+        // ==========================================
+        // DATA CRUD (Create, Read, Update, Delete)
+        // ==========================================
+
+        function updatePoints(id, amount) {
+            if (STORAGE_MODE === 'LOCAL') {
+                const p = competitors.find(c => c.id === id);
+                if (p) {
+                    p.points = parseInt(p.points) + amount;
+                    saveData();
                 }
             } else {
-                 imageUrl = "https://via.placeholder.com/60/d4af37/000000?text=" + name.charAt(0);
-            }
-
-            try {
-                await addDoc(collection(window.dbInstance, 'artifacts', appId, 'public', 'data', 'competitors'), {
-                    name: name,
-                    points: points,
-                    image: imageUrl,
-                    timestamp: Date.now()
+                const p = competitors.find(c => c.id === id);
+                db.collection(COLLECTION_NAME).doc(id).update({
+                    points: parseInt(p.points) + amount
                 });
-                
-                document.getElementById('newName').value = '';
-                document.getElementById('newPoints').value = '';
-                document.getElementById('newImage').value = '';
-                showToast("تمت الإضافة بنجاح");
-            } catch (e) {
-                console.error(e);
-                showToast("حدث خطأ أثناء الإضافة");
-            }
-        });
-
-        // 2. Delete
-        async function deleteCompetitor(db, id) {
-            if(confirm("هل أنت متأكد من الحذف؟")) {
-                try {
-                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'competitors', id));
-                    showToast("تم الحذف");
-                } catch (e) {
-                    showToast("خطأ في الحذف");
-                }
             }
         }
 
-        // 3. Edit
-        async function editCompetitor(db, id, currentName, currentPoints) {
-            const newScore = prompt("تعديل النقاط لـ " + currentName, currentPoints);
-            if (newScore !== null && !isNaN(newScore)) {
-                try {
-                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'competitors', id), {
-                        points: parseInt(newScore)
-                    });
-                    showToast("تم التعديل");
-                } catch (e) {
-                    showToast("خطأ في التعديل");
-                }
+        function deleteParticipant(id) {
+            if(!confirm("حذف المتسابق؟")) return;
+            
+            if (STORAGE_MODE === 'LOCAL') {
+                competitors = competitors.filter(c => c.id !== id);
+                saveData();
+            } else {
+                db.collection(COLLECTION_NAME).doc(id).delete();
             }
         }
 
-        // 4. Seed Data
-        document.getElementById('seedBtn').addEventListener('click', async () => {
-            if (!window.dbInstance) return;
-            if(!confirm("إضافة بيانات تجريبية؟")) return;
-            showToast("جاري الإضافة...");
-            const batch = writeBatch(window.dbInstance);
-            const colRef = collection(window.dbInstance, 'artifacts', appId, 'public', 'data', 'competitors');
-            
-            SAMPLE_DATA.forEach(data => {
-                const newDocRef = doc(colRef);
-                batch.set(newDocRef, { ...data, timestamp: Date.now() });
-            });
+        // Modal Handling
+        function openAddModal() {
+            document.getElementById('modalTitle').innerText = 'إضافة متسابق جديد';
+            document.getElementById('editId').value = '';
+            document.getElementById('pName').value = '';
+            document.getElementById('pPoints').value = 0;
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('participantModal').style.display = 'flex';
+        }
 
-            try {
-                await batch.commit();
-                showToast("تمت إضافة البيانات التجريبية");
-            } catch(e) {
-                showToast("خطأ في الإضافة");
+        function editParticipant(id) {
+            const p = competitors.find(c => c.id === id);
+            if (!p) return;
+
+            document.getElementById('modalTitle').innerText = 'تعديل بيانات';
+            document.getElementById('editId').value = id;
+            document.getElementById('pName').value = p.name;
+            document.getElementById('pPoints').value = p.points;
+            if(p.image) {
+                const img = document.getElementById('imagePreview');
+                img.src = p.image;
+                img.style.display = 'block';
             }
-        });
+            document.getElementById('participantModal').style.display = 'flex';
+        }
 
-        // 5. Reset All
-        document.getElementById('resetBtn').addEventListener('click', async () => {
-            if (!window.dbInstance) return;
-            if(!confirm("تحذير: سيتم حذف جميع المتسابقين نهائياً. هل أنت متأكد؟")) return;
+        async function saveParticipant() {
+            const id = document.getElementById('editId').value;
+            const name = document.getElementById('pName').value;
+            const points = parseInt(document.getElementById('pPoints').value);
+            const fileInput = document.getElementById('pImageInput');
             
-            showToast("جاري الحذف...");
-            try {
-                const q = collection(window.dbInstance, 'artifacts', appId, 'public', 'data', 'competitors');
-                const snapshot = await getDocs(q);
-                const batch = writeBatch(window.dbInstance);
-                
-                snapshot.forEach(doc => {
-                    batch.delete(doc.ref);
-                });
+            if (!name) return alert("الاسم مطلوب");
 
-                await batch.commit();
-                showToast("تم حذف جميع البيانات");
-            } catch(e) {
-                console.error(e);
-                showToast("خطأ أثناء الحذف");
+            let imageBase64 = null;
+            
+            // Handle Image
+            if (fileInput.files && fileInput.files[0]) {
+                try {
+                    imageBase64 = await resizeImage(fileInput.files[0]);
+                } catch (e) {
+                    alert("خطأ في الصورة");
+                    return;
+                }
+            } else if (id) {
+                // Keep existing image if editing
+                const existing = competitors.find(c => c.id === id);
+                imageBase64 = existing.image;
+            } else {
+                // Default avatar
+                imageBase64 = 'https://cdn-icons-png.flaticon.com/512/847/847969.png';
             }
-        });
 
+            const newDoc = {
+                name: name,
+                points: points,
+                image: imageBase64
+            };
 
-        // --- UTILS ---
+            if (STORAGE_MODE === 'LOCAL') {
+                if (id) {
+                    const index = competitors.findIndex(c => c.id === id);
+                    competitors[index] = { id, ...newDoc };
+                } else {
+                    newDoc.id = Date.now().toString();
+                    competitors.push(newDoc);
+                }
+                saveData();
+            } else {
+                if (id) {
+                    db.collection(COLLECTION_NAME).doc(id).update(newDoc);
+                } else {
+                    db.collection(COLLECTION_NAME).add(newDoc);
+                }
+            }
+
+            closeModal('participantModal');
+            // Clear input
+            fileInput.value = '';
+        }
+
+        // ==========================================
+        // UTILITIES & VISUALS
+        // ==========================================
         
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        function toggleMusic() {
+            const audio = document.getElementById('bgMusic');
+            const btn = document.getElementById('musicBtn');
+            if (audio.paused) {
+                audio.play();
+                btn.innerHTML = '<i class="fas fa-pause"></i>';
+            } else {
+                audio.pause();
+                btn.innerHTML = '<i class="fas fa-play"></i>';
+            }
+        }
+
+        // Helper to resize images (Base64 is heavy, so we shrink it)
         function resizeImage(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
-                reader.readAsDataURL(file);
                 reader.onload = (event) => {
                     const img = new Image();
-                    img.src = event.target.result;
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
                         const ctx = canvas.getContext('2d');
-                        const MAX_WIDTH = 150;
-                        const MAX_HEIGHT = 150;
-                        let width = img.width;
-                        let height = img.height;
-                        if (width > height) {
-                            if (width > MAX_WIDTH) {
-                                height *= MAX_WIDTH / width;
-                                width = MAX_WIDTH;
-                            }
-                        } else {
-                            if (height > MAX_HEIGHT) {
-                                width *= MAX_HEIGHT / height;
-                                height = MAX_HEIGHT;
-                            }
-                        }
-                        canvas.width = width;
-                        canvas.height = height;
-                        ctx.drawImage(img, 0, 0, width, height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.7));
+                        // Max dimensions
+                        const MAX_WIDTH = 200;
+                        const scaleSize = MAX_WIDTH / img.width;
+                        canvas.width = MAX_WIDTH;
+                        canvas.height = img.height * scaleSize;
+                        
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.7)); // Compress to 0.7 quality
                     };
-                    img.onerror = (e) => reject(e);
+                    img.src = event.target.result;
                 };
-                reader.onerror = (e) => reject(e);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
             });
         }
 
-        function showToast(msg) {
-            const x = document.getElementById("toast");
-            x.innerText = msg;
-            x.className = "show";
-            setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
-        }
-
-        // --- GLOBAL EXPORTS FOR HTML ONCLICK ---
-        
-        window.toggleLoginModal = function() {
-            if(window.isAdminLocal) {
-                logout();
-            } else {
-                document.getElementById('loginModal').style.display = 'flex';
-                document.getElementById('adminPass').value = '';
-                document.getElementById('adminPass').focus();
+        function previewImage() {
+            const file = document.getElementById('pImageInput').files[0];
+            const preview = document.getElementById('imagePreview');
+            const reader = new FileReader();
+            reader.onloadend = function () {
+                preview.src = reader.result;
+                preview.style.display = "block";
             }
+            if (file) { reader.readAsDataURL(file); }
         }
 
-        window.checkLogin = function() {
-            const pass = document.getElementById('adminPass').value;
-            if (pass === ADMIN_PASS) {
-                window.isAdminLocal = true;
-                document.getElementById('admin-panel').style.display = 'block';
-                document.getElementById('loginModal').style.display = 'none';
-                renderLeaderboard(); // Re-render to show edit buttons
-                showToast("تم تسجيل الدخول");
-            } else {
-                showToast("كلمة المرور غير صحيحة");
+        function initBubbles() {
+            const container = document.getElementById('bubbles');
+            for(let i=0; i<15; i++) {
+                const b = document.createElement('div');
+                b.className = 'bubble';
+                b.style.left = Math.random() * 100 + '%';
+                b.style.width = (Math.random() * 10 + 5) + 'px';
+                b.style.height = b.style.width;
+                b.style.animationDuration = (Math.random() * 5 + 5) + 's';
+                b.style.animationDelay = (Math.random() * 5) + 's';
+                container.appendChild(b);
             }
-        }
-
-        window.logout = function() {
-            window.isAdminLocal = false;
-            document.getElementById('admin-panel').style.display = 'none';
-            renderLeaderboard();
-            showToast("تم تسجيل الخروج");
-        }
-
-        const bgMusic = document.getElementById('bgMusic');
-        bgMusic.volume = 0.3;
-
-        window.toggleMusic = function() {
-            const btn = document.getElementById('playBtn');
-            if (bgMusic.paused) {
-                bgMusic.play();
-                btn.innerText = "⏸";
-            } else {
-                bgMusic.pause();
-                btn.innerText = "▶";
-            }
-        }
-
-        window.adjustVolume = function(change) {
-            let newVol = bgMusic.volume + change;
-            if (newVol > 1) newVol = 1;
-            if (newVol < 0) newVol = 0;
-            bgMusic.volume = newVol;
         }
 
     </script>
