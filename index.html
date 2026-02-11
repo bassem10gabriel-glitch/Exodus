@@ -251,44 +251,42 @@
             }
         });
 
-        // --- 2. دالة حفظ الإعدادات من المودال ---
+        // --- 2. دالة حفظ الإعدادات من المودال (النسخة النهائية الذكية) ---
         window.saveConfig = function() {
-            const input = document.getElementById('configInput').value;
-            // تنظيف المدخلات (استخراج الكائن فقط في حال نسخ المستخدم لنصوص زائدة)
+            let input = document.getElementById('configInput').value.trim();
+
+            // 1. تنظيف أولي لاسم المتغير (مثل const firebaseConfig = )
+            input = input.replace(/^(const|let|var)\s+\w+\s*=\s*/, '');
+            input = input.replace(/;$/, ''); // حذف الفاصلة المنقوطة في النهاية
+
+            // 2. البحث عن الأقواس لتحديد حدود الكائن
+            const firstBrace = input.indexOf('{');
+            const lastBrace = input.lastIndexOf('}');
+
+            if (firstBrace !== -1 && lastBrace !== -1) {
+                // استخراج ما بين القوسين فقط (شاملاً القوسين)
+                input = input.substring(firstBrace, lastBrace + 1);
+            }
+
             try {
-                // --- تحسين ذكي (Updated Logic) ---
-                // البحث عن بداية ونهاية الكائن {}
-                const firstBrace = input.indexOf('{');
-                const lastBrace = input.lastIndexOf('}');
+                // الطريقة الذكية: بدلاً من محاولة تصحيح النص كـ JSON (وهو صعب بسبب الفواصل والأقواس)
+                // نستخدم خدعة بسيطة لقراءة كائن الجافاسكريبت مباشرة كما هو
+                // هذا السطر يقرأ النص كأنه كود برمجي ويحوله لكائن، مما يحل مشاكل الفواصل وعلامات التنصيص تلقائياً
+                const config = new Function('return ' + input)();
                 
-                let cleanJson;
-                
-                if (firstBrace !== -1 && lastBrace !== -1) {
-                    // استخراج ما بين الأقواس فقط
-                    cleanJson = input.substring(firstBrace, lastBrace + 1);
-                } else {
-                    // إذا لم يجد أقواس، استخدم النص كما هو (ربما المستخدم نسخه نظيفاً)
-                    cleanJson = input;
+                // التأكد من أن الكائن يحتوي على بيانات صحيحة
+                if (!config.apiKey || !config.projectId) {
+                    throw new Error("الكود لا يحتوي على بيانات Firebase الصحيحة");
                 }
 
-                // تنظيف إضافي لإزالة const, variable names, trailing comma
-                cleanJson = cleanJson.replace(/const\s+\w+\s*=\s*/, '')
-                                     .replace(/;/g, '');
-
-                // تحويل المفاتيح غير المقتبسة إلى مقتبسة (JS Object -> JSON)
-                cleanJson = cleanJson.replace(/(['"])?([a-zA-Z0-9_]+)(['"])?:/g, '"$2": ');
-                cleanJson = cleanJson.replace(/'/g, '"'); // توحيد علامات التنصيص
-                
-                // التأكد من صحة الـ JSON
-                JSON.parse(cleanJson); // Just to test parsing
-                
-                localStorage.setItem('exodus_firebase_config', cleanJson);
+                // الحفظ وإعادة التشغيل
+                localStorage.setItem('exodus_firebase_config', JSON.stringify(config));
                 document.getElementById('setupModal').classList.add('hidden');
                 document.getElementById('loadingOverlay').classList.remove('hidden');
-                location.reload(); // إعادة تحميل لبدء الاتصال
+                location.reload();
             } catch (e) {
-                alert("لم يتم التعرف على الكود. تأكد من نسخ ما بين الأقواس { ... } فقط.");
                 console.error(e);
+                alert("عفواً، لم أتمكن من قراءة الكود. \nتأكد من نسخ ما بين الأقواس { } بشكل صحيح.\n\nتفاصيل الخطأ: " + e.message);
             }
         }
 
@@ -412,7 +410,7 @@
         // Icons
         const icons = {
             fire: `<svg class="w-8 h-8 text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 22c4.97 0 9-4.03 9-9 0-4.97-9-13-9-13S3 8.03 3 13c0 4.97 4.03 9 9 9zm0-2c-3.87 0-7-3.13-7-7 0-2.26 3.14-6.42 5.71-9.69C11.54 4.3 12 3.71 12 3.71s.46.59 1.29 1.6C15.86 8.58 19 12.74 19 13c0 3.87-3.13 7-7 7z"/></svg>`,
-            tablets: `<svg class="w-8 h-8 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M6 2h12a2 2 0 012 2v18H4V4a2 2 0 012-2zm2 4v2h2V6H8zm4 0v2h2V6h-2zm-4 4v2h2v-2H8zm4 0v2h2v-2h-2zm-4 4v2h2v-2H8zm4 0v2h2v-2h-2z"/></svg>`,
+            tablets: `<svg class="w-8 h-8 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M6 2h12a2 2 0 012 2v18H4V4a2 2 0 012-2zm2 4v2h2V6H8zm4 0v2h2V6h-2zm-4 4v2h2v-2H8zm4 0v2h2v-2h-2zm-4 4v2h2v-2h-2zm-4 4v2h2v-2H8zm4 0v2h2v-2h-2z"/></svg>`,
             staff: `<svg class="w-8 h-8 text-amber-600 transform rotate-12" fill="currentColor" viewBox="0 0 24 24"><path d="M5 22h2l1.5-5 .5-1.5L7 3h2l2 12.5.5 1.5L13 22h2l-2.5-7-2-13H8L6 15z"/></svg>`
         };
 
