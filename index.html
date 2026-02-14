@@ -6,7 +6,7 @@
     <title>مسابقة الخروج - Exodus Competition</title>
     
     <!-- الخطوط -->
-    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,700&family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -28,18 +28,99 @@
         @keyframes swell { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(1.02); } }
 
         /* الكروت */
-        .competitor-card { transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .competitor-card { transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); border-bottom: 1px solid rgba(255,255,255,0.05); position: relative; }
         .rank-1 { background: linear-gradient(90deg, rgba(239, 68, 68, 0.25), transparent); border-right: 4px solid var(--fire); }
         .rank-2 { background: linear-gradient(90deg, rgba(251, 191, 36, 0.2), transparent); border-right: 4px solid var(--gold); }
         .rank-3 { background: linear-gradient(90deg, rgba(148, 163, 184, 0.2), transparent); border-right: 4px solid #94a3b8; }
         .weekly-winner-glow { animation: holyGlow 3s infinite alternate; }
         @keyframes holyGlow { from { box-shadow: inset 0 0 10px rgba(251, 191, 36, 0.2); } to { box-shadow: inset 0 0 30px rgba(251, 191, 36, 0.5); } }
-        .glass-panel { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .glass-panel { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
         
+        /* مؤشر الحالة */
         .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-left: 5px; }
         .status-online { background-color: #22c55e; box-shadow: 0 0 8px #22c55e; }
-        .status-offline { background-color: #ef4444; }
         .status-warning { background-color: #fbbf24; box-shadow: 0 0 8px #fbbf24; }
+
+        /* Avatar & Icons (Soccer Legends Style) */
+        .avatar-svg { filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)); transition: transform 0.3s; }
+        .big-head-wrapper { transform-origin: bottom center; transition: transform 0.2s; cursor: pointer; }
+        .big-head-wrapper:hover { transform: scale(1.1) rotate(2deg); }
+        
+        /* Creator Controls */
+        .creator-tab { 
+            padding: 8px;
+            font-size: 0.85rem; 
+            border-top-left-radius: 0.5rem; 
+            border-top-right-radius: 0.5rem;
+            background-color: #1e293b; 
+            color: #9ca3af; 
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1;
+            text-align: center;
+            border-bottom: 3px solid transparent;
+            font-weight: bold;
+        }
+        .creator-tab:hover { background-color: #334155; }
+        .creator-tab.active { 
+            background-color: #334155; 
+            color: #fbbf24; 
+            border-bottom-color: #fbbf24;
+        }
+
+        .option-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); 
+            gap: 10px; 
+            max-height: 250px; 
+            overflow-y: auto; 
+            padding: 10px; 
+        }
+        
+        .color-dot { width: 35px; height: 35px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.1); cursor: pointer; transition: 0.2s; margin: 0 auto; }
+        .color-dot.selected { border-color: var(--gold); transform: scale(1.2); box-shadow: 0 0 10px var(--gold); }
+        
+        .item-btn { 
+            background-color: #1e293b; 
+            border-radius: 0.5rem; 
+            border: 2px solid #475569; 
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 60px;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .item-btn:hover { border-color: #fbbf24; }
+        .item-btn.selected { border-color: #fbbf24; box-shadow: 0 0 10px rgba(251, 191, 36, 0.3); }
+
+        /* Miracle Animations (Local Only) */
+        #miracleOverlay { pointer-events: none; }
+        .miracle-btn { cursor: pointer; transition: all 0.2s; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2)); opacity: 0.9; }
+        .miracle-btn:hover { transform: scale(1.2); opacity: 1; filter: drop-shadow(0 0 8px var(--gold)); }
+        .miracle-btn:active { transform: scale(0.9); }
+
+        /* Passing Animation (Friendly) */
+        @keyframes passJump {
+            0% { transform: translateY(0); }
+            30% { transform: translateY(-15px) scale(1.05); }
+            50% { transform: translateY(0) scale(1); box-shadow: 0 0 25px var(--gold); background: rgba(251, 191, 36, 0.1); }
+            70% { transform: translateY(-5px); }
+            100% { transform: translateY(0); }
+        }
+        .pass-anim { animation: passJump 0.8s ease-in-out; z-index: 20; border: 1px solid var(--gold); }
+
+        /* Custom Scrollbar */
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
+        
+        /* Auth Form */
+        .auth-input { width: 100%; background: rgba(0,0,0,0.5); border: 1px solid #475569; padding: 10px; border-radius: 8px; color: white; text-align: center; margin-bottom: 10px; }
+        .auth-input:focus { outline: none; border-color: #fbbf24; }
     </style>
 </head>
 <body>
@@ -47,83 +128,151 @@
     <div class="red-sea-bg"><div class="wave-wall wave-left"></div><div class="wave-wall wave-right"></div><div class="absolute inset-0 flex justify-center items-end opacity-30 pointer-events-none"><div class="w-1/4 h-full bg-gradient-to-t from-orange-100/20 to-transparent"></div></div></div>
     <audio id="bgMusic" loop><source src="https://cdn.pixabay.com/download/audio/2022/08/02/audio_884fe92c21.mp3?filename=soft-ambient-116346.mp3" type="audio/mpeg"></audio>
 
-    <div class="relative z-10 flex flex-col h-full max-w-4xl mx-auto w-full p-4">
-        <header class="text-center py-4 relative">
-            <h1 class="text-3xl md:text-5xl text-amber-400 biblical-font font-bold drop-shadow-lg mb-1">مسابقة رحلة الخروج</h1>
-            <p class="text-blue-200/60 text-sm">تحديث فوري - أونلاين</p>
-            <button onclick="toggleMusic()" class="absolute top-4 left-4 text-white/50 hover:text-amber-400 transition z-50"><i class="fas fa-volume-mute text-2xl" id="musicIcon"></i></button>
+    <!-- Miracle Overlay Container -->
+    <div id="miracleOverlay" class="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center hidden overflow-hidden"></div>
+
+    <div class="relative z-10 flex flex-col h-full max-w-5xl mx-auto w-full p-4">
+        <header class="text-center py-2 relative">
+            <h1 class="text-4xl md:text-6xl text-amber-400 biblical-font font-bold drop-shadow-lg mb-4">مسابقة رحلة الخروج</h1>
+            
+            <!-- Bible Verse Block (Smaller Size) -->
+            <div class="bg-black/40 p-4 rounded-xl border-y-2 border-amber-500/30 max-w-3xl mx-auto mb-4 backdrop-blur-sm shadow-xl">
+                <p class="text-amber-100/95 text-xs md:text-sm leading-loose biblical-font text-center" style="direction: rtl;">
+                    «لِذَلِكَ قُلْ لِبَنِي إِسْرَائِيلَ: أَنَا الرَّبُّ. وَأَنَا أُخْرِجُكُمْ مِنْ تَحْتِ أَثْقَالِ الْمِصْرِيِّينَ وَأُنْقِذُكُمْ مِنْ عُبُودِيَّتِهِمْ وَأُخَلِّصُكُمْ بِذِرَاعٍ مَمْدُودَةٍ وَبِأَحْكَامٍ عَظِيمَةٍ.
+                    <br>
+                    <span class="text-amber-500 font-bold number-en mx-1">7</span> وَأَتَّخِذُكُمْ لِي شَعْبًا، وَأَكُونُ لَكُمْ إِلهًا. فَتَعْلَمُونَ أَنِّي أَنَا الرَّبُّ إِلهُكُمُ الَّذِي يُخْرِجُكُمْ مِنْ تَحْتِ أَثْقَالِ الْمِصْرِيِّينَ».
+                </p>
+                <p class="text-amber-400/60 text-[10px] mt-2 text-center font-sans number-en">(خروج 6: 6-7)</p>
+            </div>
+
+            <!-- Controls -->
+            <button onclick="toggleMusic()" class="absolute top-4 left-4 text-white/50 hover:text-amber-400 transition z-50 p-2"><i class="fas fa-volume-mute text-2xl" id="musicIcon"></i></button>
+            <button onclick="openVerseModal()" class="absolute top-4 right-4 text-amber-500 hover:text-amber-300 transition z-50 hover:scale-110 p-2"><i class="fas fa-bookmark text-4xl drop-shadow-[0_0_15px_rgba(251,191,36,0.6)]"></i></button>
         </header>
 
         <main class="flex-1 overflow-hidden flex flex-col glass-panel rounded-2xl shadow-2xl mt-2 relative">
             <div id="loadingOverlay" class="absolute inset-0 bg-slate-900/95 z-20 flex flex-col items-center justify-center p-6 text-center">
                 <i id="loadingIcon" class="fas fa-spinner fa-spin text-4xl text-amber-500 mb-4"></i>
-                <div id="loadingMsg" class="text-amber-100 max-w-md">
-                    جاري الاتصال بقاعدة البيانات...
-                </div>
+                <div id="loadingMsg" class="text-amber-100 max-w-md">جاري تحميل البيانات...</div>
             </div>
-            <div class="flex justify-between items-center p-4 bg-black/40 text-amber-100/70 text-sm font-bold uppercase">
-                <div class="w-16 text-center">#</div>
-                <div class="flex-1 pr-4">الفريق</div>
-                <div class="w-24 text-center">النقاط</div>
+            
+            <div class="flex justify-between items-center p-3 bg-black/40 text-amber-100/70 text-sm font-bold uppercase border-b border-white/5">
+                <div class="w-10 text-center">#</div>
+                <div class="w-16 text-center">البطل</div>
+                <div class="flex-1 pr-4 text-right">الاسم</div>
+                <div class="w-20 text-center">المعجزة</div>
+                <div class="w-16 text-center">النقاط</div>
             </div>
-            <div id="leaderboardList" class="flex-1 overflow-y-auto custom-scroll relative"></div>
+            
+            <div id="leaderboardList" class="flex-1 overflow-y-auto custom-scroll relative p-2 space-y-2">
+                <!-- Rows injected here -->
+            </div>
         </main>
 
         <footer class="py-4 text-center text-xs text-white/30 flex justify-between items-center px-4">
-            <div class="flex items-center"><span id="connectionDot" class="status-dot status-offline"></span><span id="connectionText">غير متصل</span></div>
+            <div class="flex items-center"><span id="connectionDot" class="status-dot status-warning"></span><span id="connectionText">جاري الاتصال</span></div>
             <button onclick="openAdminLogin()" class="hover:text-white transition underline">لوحة القائد (Admin)</button>
         </footer>
     </div>
 
-    <!-- Login Modal -->
-    <div id="loginModal" class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center hidden">
+    <!-- AUTH / SIGN UP MODAL -->
+    <div id="signupModal" class="fixed inset-0 bg-black/95 z-[100] flex flex-col items-center justify-center hidden p-4 overflow-y-auto">
+        <div id="authBox" class="w-full max-w-md bg-slate-900 border border-amber-500/30 rounded-2xl p-8 shadow-2xl flex flex-col items-center">
+            <h2 class="text-3xl text-amber-400 biblical-font mb-2">تسجيل الدخول</h2>
+            <p class="text-gray-400 text-xs mb-6 text-center">سجل بريدك الإلكتروني لحفظ تقدمك وشخصيتك</p>
+            <input type="email" id="authEmail" placeholder="البريد الإلكتروني" class="auth-input">
+            <input type="password" id="authPass" placeholder="كلمة المرور (6 أرقام على الأقل)" class="auth-input">
+            <button onclick="handleAuth()" class="w-full bg-amber-600 hover:bg-amber-500 text-black font-bold py-3 rounded-lg mt-2">دخول / إنشاء حساب</button>
+            <p id="authError" class="text-red-400 text-xs mt-3 hidden text-center"></p>
+        </div>
+
+        <div id="creatorBox" class="w-full max-w-5xl bg-slate-900 border border-amber-500/30 rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[90vh] hidden">
+            <!-- 1. Preview -->
+            <div class="md:w-1/3 bg-slate-800/50 p-6 flex flex-col items-center justify-center border-b md:border-b-0 md:border-l border-white/10">
+                <h2 class="text-2xl text-amber-400 biblical-font mb-2">اصنع بطلك</h2>
+                <div class="relative w-56 h-56 mb-4 bg-gradient-to-b from-blue-900/20 to-transparent rounded-full border border-white/5 flex items-center justify-center transform hover:scale-105 transition duration-500">
+                    <div id="signupAvatarPreview" class="w-48 h-48"></div>
+                </div>
+                <div class="w-full space-y-3">
+                    <input type="text" id="signupName" placeholder="اسمك في اللعبة" class="auth-input">
+                    <div class="bg-black/30 p-3 rounded-xl border border-slate-700 flex items-center justify-between px-4">
+                        <span class="text-gray-400 text-xs">معجزتك:</span>
+                        <div class="flex items-center gap-2 text-amber-400 font-bold">
+                            <span id="signupMiracleName" class="text-sm">اختر من القائمة</span>
+                            <span id="signupMiracleIcon" class="text-2xl">✨</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- 2. Customization -->
+            <div class="md:w-2/3 p-6 flex flex-col bg-slate-900">
+                <div class="flex gap-1 mb-4 border-b border-white/10 pb-1 overflow-x-auto">
+                    <button onclick="setTab('skin')" class="creator-tab active" id="tab-skin">البشرة</button>
+                    <button onclick="setTab('hair')" class="creator-tab" id="tab-hair">الشعر</button>
+                    <button onclick="setTab('eyes')" class="creator-tab" id="tab-eyes">العيون</button>
+                    <button onclick="setTab('clothes')" class="creator-tab" id="tab-clothes">الملابس</button>
+                    <button onclick="setTab('miracle')" class="creator-tab text-amber-300" id="tab-miracle">المعجزة</button>
+                </div>
+                <div id="optionsContainer" class="flex-1 overflow-y-auto custom-scroll min-h-[300px] mb-6 bg-black/20 rounded-xl border border-white/5 p-4"></div>
+                <button onclick="saveNewCharacter()" class="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-bold py-3 rounded-xl shadow-lg">
+                    حفظ وبدء اللعب <i class="fas fa-check mr-2"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Verse Modal -->
+    <div id="verseModal" class="fixed inset-0 bg-black/80 z-[80] flex items-start justify-end hidden">
+        <div class="h-full w-full md:w-1/3 bg-slate-900 border-l border-amber-500/50 p-6 shadow-2xl transform transition-transform duration-300 overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl text-amber-400 biblical-font"><i class="fas fa-scroll ml-2"></i>رسالة القائد</h2>
+                <button onclick="closeModal('verseModal')" class="text-gray-400 hover:text-white"><i class="fas fa-times text-2xl"></i></button>
+            </div>
+            <div id="verseDisplay" class="bg-black/30 p-6 rounded-lg border border-white/5 min-h-[200px]">
+                <p id="verseText" class="text-white text-lg leading-loose font-serif text-justify whitespace-pre-wrap">انتظر رسالة من القائد...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Login Modal -->
+    <div id="loginModal" class="fixed inset-0 bg-black/90 z-[90] flex items-center justify-center hidden">
         <div class="bg-slate-800 p-8 rounded-xl border border-amber-500/30 w-full max-w-sm text-center">
-            <h2 class="text-2xl text-amber-400 biblical-font mb-6">الدخول</h2>
-            <!-- تم إضافة autocomplete="new-password" لمنع الاقتراح التلقائي -->
+            <h2 class="text-2xl text-amber-400 biblical-font mb-6">دخول القائد</h2>
             <input type="password" id="adminPass" placeholder="كلمة المرور" autocomplete="new-password" class="w-full p-3 bg-slate-900 border border-slate-700 rounded mb-4 text-center text-white focus:outline-none focus:border-amber-500">
             <div class="flex gap-2"><button onclick="closeModal('loginModal')" class="flex-1 py-2 bg-slate-700 rounded">إلغاء</button><button onclick="checkLogin()" class="flex-1 py-2 bg-amber-600 text-black font-bold rounded">دخول</button></div>
         </div>
     </div>
 
     <!-- Admin Modal -->
-    <div id="adminModal" class="fixed inset-0 bg-black/95 z-50 flex flex-col hidden overflow-y-auto">
-        <div class="p-4 md:p-8 max-w-5xl mx-auto w-full">
+    <div id="adminModal" class="fixed inset-0 bg-black/95 z-[95] flex flex-col hidden overflow-y-auto">
+        <div class="p-4 md:p-8 max-w-6xl mx-auto w-full">
             <div class="flex justify-between items-center mb-8 border-b border-white/10 pb-4">
-                <h2 class="text-3xl text-amber-400 biblical-font">لوحة القائد</h2>
+                <h2 class="text-3xl text-amber-400 biblical-font">لوحة التحكم</h2>
                 <button onclick="closeModal('adminModal')" class="px-4 py-2 bg-red-900/50 hover:bg-red-600 rounded text-red-200">خروج</button>
             </div>
-            <div class="bg-slate-800/50 p-6 rounded-xl border border-white/5 mb-8">
-                <h3 class="text-xl mb-4 text-blue-200">إضافة فريق</h3>
-                <div class="flex flex-col md:flex-row gap-4 items-start">
-                    <div class="w-full md:w-auto flex flex-col items-center">
-                        <label for="newImgInput" class="w-16 h-16 rounded-full bg-slate-700 flex items-center justify-center cursor-pointer hover:bg-slate-600 overflow-hidden border-2 border-dashed border-slate-500">
-                            <img id="previewImg" src="" class="w-full h-full object-cover hidden"><i id="uploadIcon" class="fas fa-camera text-white/50"></i>
-                        </label>
-                        <input type="file" id="newImgInput" accept="image/*" class="hidden" onchange="handleImagePreview(this)">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-slate-800/80 p-6 rounded-xl border border-amber-500/30">
+                    <h3 class="text-xl text-amber-300 mb-4 font-bold border-b border-white/10 pb-2"><i class="fas fa-edit ml-2"></i>تعديل الرسالة</h3>
+                    <textarea id="adminVerseInput" class="w-full h-40 bg-slate-900 border border-slate-600 rounded p-4 text-white focus:border-amber-500 focus:outline-none text-right mb-4 leading-relaxed text-lg"></textarea>
+                    <button onclick="saveVerseFromAdmin()" class="w-full bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold shadow-lg">حفظ ونشر</button>
+                </div>
+                <div class="bg-slate-800/80 p-6 rounded-xl border border-white/5">
+                    <div class="flex justify-between items-center mb-4 border-b border-white/10 pb-2">
+                        <h3 class="text-xl text-blue-200 font-bold">إدارة النقاط</h3>
+                        <button onclick="deleteAllData()" class="text-xs text-red-400 hover:text-red-300 underline">حذف الكل</button>
                     </div>
-                    <input type="text" id="newName" placeholder="الاسم" class="flex-1 bg-slate-900 border border-slate-700 p-3 rounded text-white w-full">
-                    <input type="number" id="newPoints" placeholder="0" class="w-full md:w-24 bg-slate-900 border border-slate-700 p-3 rounded text-white text-center number-en">
-                    <button onclick="addCompetitor()" class="bg-green-600 hover:bg-green-500 text-white px-6 py-3 rounded font-bold w-full md:w-auto">إضافة</button>
+                    <div id="adminList" class="space-y-2 max-h-[60vh] overflow-y-auto custom-scroll pr-2"></div>
                 </div>
             </div>
-            <div class="bg-slate-800/50 p-6 rounded-xl border border-white/5">
-                <div class="flex justify-between items-center mb-4"><h3 class="text-xl text-blue-200">النقاط</h3><button onclick="deleteAllData()" class="text-xs text-red-400 hover:text-red-300 underline">حذف الكل</button></div>
-                <div id="adminList" class="space-y-2"></div>
-            </div>
-            <button onclick="closeModal('adminModal')" class="mt-8 mx-auto block text-slate-400 hover:text-white">عودة</button>
         </div>
     </div>
 
-    <!-- Firebase Logic -->
+    <!-- Scripts -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, setDoc, updateDoc, arrayUnion, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        // =================================================================
-        // تم لصق كود فايربيس الخاص بك هنا بنجاح
-        // =================================================================
-        
         const manualConfig = {
           apiKey: "AIzaSyDaiNplUIh8mFFOUmFTx-dnEC9HxeL2wF8",
           authDomain: "kkww-54462.firebaseapp.com",
@@ -134,151 +283,466 @@
         };
 
         window.db = null;
+        window.auth = null;
+        window.currentUser = null;
         window.competitors = [];
+        window.currentVerse = "انتظر رسالة القائد...";
+        window.isAdmin = false;
+        
+        window.avatarState = { skinColor: '#e8beac', hairColor: '#1a1a1a', hairStyle: 0, eyeStyle: 0, mouthStyle: 0, clothesStyle: 0, clothesColor: '#3b82f6', extra: 0 };
+        window.selectedMiracle = 'bush'; 
+
+        const ASSETS = {
+            skinColors: ['#fca', '#e8beac', '#d08d72', '#a67b5b', '#8d5524', '#593a23'],
+            hairColors: ['#1a1a1a', '#4a3000', '#8b4513', '#d6c000', '#a00', '#808080', '#f0f0f0'],
+            clothesColors: ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ffffff', '#333333'],
+            miracles: [
+                { id: 'bush', icon: '🌳', transform: '🔥🌳', name: 'العليقة المشتعلة' },
+                { id: 'snake', icon: '🪵', transform: '🐍', name: 'العصا ثعبان' },
+                { id: 'blood', icon: '💧', transform: '🩸', name: 'الماء دم' },
+                { id: 'sea', icon: '🌊', transform: '🌊🛤️', name: 'شق البحر' },
+                { id: 'frog', icon: '⛲', transform: '🐸', name: 'الضفادع' },
+                { id: 'light', icon: '☁️', transform: '✨', name: 'نور من السماء' },
+                { id: 'manna', icon: '🧺', transform: '🍞', name: 'المن والسلوى' },
+            ]
+        };
+
+        // SOCCER LEGENDS STYLE PATHS (Big Head, Clean Hair)
+        const PATHS = {
+            // Hair sits ON TOP of head (y=0 to 45), Head starts at y=20
+            hair: [
+                // 0: Modern Spiky
+                `M20,45 L20,30 L30,45 L40,25 L50,45 L60,25 L70,45 L80,30 L80,45 L80,60 Q50,50 20,60 Z`,
+                // 1: Slick Back
+                `M20,50 Q20,20 50,15 Q80,20 80,50 L80,60 Q50,50 20,60 Z`,
+                // 2: Side Part
+                `M15,50 Q40,10 85,45 L85,65 L80,65 Q50,55 20,65 Z`,
+                // 3: Afro / Curly
+                `M15,50 Q10,20 30,20 Q50,10 70,20 Q90,20 85,50 L85,65 Q50,55 15,65 Z`,
+                // 4: Long Flowing
+                `M20,40 Q50,15 80,40 L85,90 L75,90 L75,60 Q50,50 25,60 L25,90 L15,90 Z`
+            ],
+            eyes: [
+                // 0: Big Anime/Cartoon
+                `<g><circle cx="38" cy="55" r="5" fill="white" stroke="#222"/><circle cx="38" cy="55" r="2" fill="black"/><circle cx="62" cy="55" r="5" fill="white" stroke="#222"/><circle cx="62" cy="55" r="2" fill="black"/><path d="M32,48 Q38,45 44,48" stroke="#222" stroke-width="2" fill="none"/><path d="M56,48 Q62,45 68,48" stroke="#222" stroke-width="2" fill="none"/></g>`,
+                // 1: Determined
+                `<g><path d="M32,52 L44,55" stroke="#222" stroke-width="2"/><path d="M68,52 L56,55" stroke="#222" stroke-width="2"/><circle cx="38" cy="58" r="3" fill="black"/><circle cx="62" cy="58" r="3" fill="black"/></g>`,
+                // 2: Happy
+                `<g><path d="M34,55 Q38,50 42,55" stroke="#222" stroke-width="2" fill="none"/><path d="M58,55 Q62,50 66,55" stroke="#222" stroke-width="2" fill="none"/></g>`
+            ],
+            mouths: [
+                `<path d="M42,70 Q50,75 58,70" fill="none" stroke="#222" stroke-width="2" stroke-linecap="round"/>`, 
+                `<rect x="42" y="70" width="16" height="4" rx="2" fill="white" stroke="#222"/>`,
+                `<circle cx="50" cy="72" r="4" fill="#222"/>`
+            ],
+            clothes: [
+                "M25,90 Q50,130 75,90 L75,120 Q50,130 25,120 Z", // Jersey
+                "M20,90 L80,90 L85,120 L15,120 Z", // Robe
+            ]
+        };
+
         const DOC_ID = 'exodus_leaderboard_data';
 
-        window.addEventListener('DOMContentLoaded', async () => {
-            if (!manualConfig) {
-                document.getElementById('loadingMsg').innerHTML = `<span class="text-red-400 font-bold">خطأ في الإعدادات!</span>`;
-                return;
-            }
+        // --- Avatar Generator ---
+        window.getAvatarSVG = function(s) {
+            if(!s) s = { skinColor: '#e8beac', hairColor: '#1a1a1a', hairStyle: 0, eyeStyle: 0, mouthStyle: 0, clothesStyle: 0, clothesColor: '#3b82f6', extra: 0 };
+            return `
+            <svg viewBox="0 0 100 120" class="w-full h-full drop-shadow-xl avatar-svg">
+                <!-- Body -->
+                <path d="${PATHS.clothes[s.clothesStyle] || PATHS.clothes[0]}" fill="${s.clothesColor}" />
+                <path d="M25,90 L15,105 M75,90 L85,105" stroke="${s.clothesColor}" stroke-width="4" stroke-linecap="round"/>
+                
+                <!-- Head Group -->
+                <g transform="translate(0, 5)">
+                    <!-- Face Shape (Squircle for Soccer Legend Look) -->
+                    <rect x="25" y="25" width="50" height="60" rx="18" fill="${s.skinColor}" />
+                    <!-- Nose -->
+                    <path d="M50,58 L48,65 L52,65 Z" fill="#dbbba5" opacity="0.5"/>
+                    <!-- Features -->
+                    ${PATHS.eyes[s.eyeStyle] || PATHS.eyes[0]}
+                    ${PATHS.mouths[s.mouthStyle] || PATHS.mouths[0]}
+                    <!-- Hair (On Top) -->
+                    <path d="${PATHS.hair[s.hairStyle] || PATHS.hair[0]}" fill="${s.hairColor}" />
+                </g>
+            </svg>
+            `;
+        }
 
-            // محاولة التهيئة
+        window.updateSignupPreview = function() {
+            document.getElementById('signupAvatarPreview').innerHTML = window.getAvatarSVG(window.avatarState);
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
             try {
                 const app = initializeApp(manualConfig);
                 window.db = getFirestore(app);
-                const auth = getAuth(app);
+                window.auth = getAuth(app);
                 
-                // محاولة تسجيل الدخول
-                // قمنا بإضافة try/catch هنا خصيصاً لتجاوز خطأ عدم تفعيل تسجيل الدخول
-                try {
-                    await signInAnonymously(auth);
-                    console.log("تم تسجيل الدخول بنجاح");
-                    document.getElementById('connectionDot').className = 'status-dot status-online';
-                    document.getElementById('connectionText').textContent = 'متصل (آمن)';
-                } catch (authError) {
-                    console.warn("فشل تسجيل الدخول، سنحاول الاتصال بدونه:", authError);
-                    // إذا كان الخطأ هو عدم التفعيل، سنتجاوزه ونكمل
-                    if (authError.code === 'auth/configuration-not-found' || authError.code === 'auth/operation-not-allowed') {
-                        document.getElementById('connectionDot').className = 'status-dot status-warning';
-                        document.getElementById('connectionText').textContent = 'متصل (عام)';
-                        document.getElementById('connectionText').className = 'text-amber-400';
-                        // لا نوقف التنفيذ، بل نكمل للخطوة التالية
-                    } else {
-                        // أخطاء أخرى قد تكون حرجة
-                        throw authError; 
-                    }
-                }
-
-                // بدء الاستماع للبيانات (سواء تم تسجيل الدخول أم لا)
-                // هذا سيعمل إذا كانت القواعد في فايربيس Test Mode
+                // Realtime Data Listener
                 const docRef = doc(window.db, "competitions", DOC_ID);
-                
-                // إخفاء شاشة التحميل
-                document.getElementById('loadingOverlay').classList.add('hidden');
-                
+                let prevData = [];
+
                 onSnapshot(docRef, (docSnap) => {
+                    document.getElementById('loadingOverlay').classList.add('hidden');
                     if (docSnap.exists()) {
-                        window.competitors = docSnap.data().teams || [];
+                        const data = docSnap.data();
+                        const newCompetitors = data.teams || [];
+                        window.currentVerse = data.verse || "مرحباً بكم...";
+                        
+                        document.getElementById('verseText').textContent = window.currentVerse;
+                        const adminInput = document.getElementById('adminVerseInput');
+                        if(adminInput) adminInput.value = window.currentVerse;
+
+                        checkPassAnimation(prevData, newCompetitors);
+                        window.competitors = newCompetitors;
+                        prevData = JSON.parse(JSON.stringify(newCompetitors));
+
                         renderLeaderboard();
-                        if(!document.getElementById('adminModal').classList.contains('hidden')) renderAdminList();
+                        if(window.isAdmin) renderAdminList();
                     } else {
-                        // إذا لم يوجد الملف، نحاول إنشاءه
-                        setDoc(docRef, { teams: [] }).catch(e => console.error("فشل الإنشاء الأولي:", e));
+                        setDoc(docRef, { teams: [], verse: "مرحباً" });
                     }
-                }, (snapshotError) => {
-                    // إذا وصلنا هنا، فهذا يعني أن القواعد تمنع القراءة بدون تسجيل دخول
-                    console.error("خطأ في جلب البيانات:", snapshotError);
-                    document.getElementById('loadingOverlay').classList.remove('hidden');
-                    document.getElementById('loadingIcon').className = "fas fa-lock text-red-500 text-4xl mb-4";
-                    document.getElementById('loadingMsg').innerHTML = `
-                        <div class="text-red-200 bg-red-900/50 p-4 rounded border border-red-500">
-                            فشل الوصول للبيانات.<br>
-                            يجب تفعيل <b>Anonymous Auth</b> في فايربيس<br>
-                            أو التأكد من أن القواعد <b>Test Mode</b>.
-                        </div>
-                    `;
+                });
+
+                // Check Login Status
+                window.auth.onAuthStateChanged(async (user) => {
+                    if (user) {
+                        window.currentUser = user;
+                        document.getElementById('connectionDot').className = 'status-dot status-online';
+                        document.getElementById('connectionText').textContent = user.email;
+                        document.getElementById('signupModal').classList.add('hidden');
+                        
+                        // Check if user has a character in DB
+                        // Note: In this simple structure, we check if user.uid matches any team ID
+                        // Ideally we store user profile in separate collection, but keeping single file simple
+                    } else {
+                        document.getElementById('signupModal').classList.remove('hidden');
+                        document.getElementById('authBox').classList.remove('hidden');
+                        document.getElementById('creatorBox').classList.add('hidden');
+                    }
                 });
 
             } catch (error) {
-                console.error("Critical Error:", error);
-                document.getElementById('loadingMsg').innerHTML = `
-                    <span class="text-red-400 font-bold">خطأ غير متوقع: ${error.message}</span>
-                `;
+                console.error(error);
+                alert("حدث خطأ في الاتصال");
             }
         });
 
-        // دوال الحفظ السحابي
-        window.saveDataToCloud = async function() {
-            if (!window.db) return;
-            window.competitors.sort((a, b) => b.points - a.points);
+        // --- Auth Logic ---
+        window.handleAuth = async function() {
+            const email = document.getElementById('authEmail').value;
+            const pass = document.getElementById('authPass').value;
+            const errBox = document.getElementById('authError');
+            
+            if(!email || !pass) {
+                alert("الرجاء إدخال البريد الإلكتروني وكلمة المرور");
+                return;
+            }
+            
+            if(pass.length < 6) {
+                alert("كلمة المرور يجب أن تكون 6 أرقام على الأقل");
+                return;
+            }
+
+            // Show loading state on button
+            const btn = document.querySelector('#authBox button');
+            const originalText = btn.innerText;
+            btn.innerText = "جاري التحقق...";
+            btn.disabled = true;
+
             try {
-                await setDoc(doc(window.db, "competitions", DOC_ID), { teams: window.competitors });
-            } catch(e) {
-                alert("فشل الحفظ: ربما لا تملك الصلاحية. تأكد من تفعيل Anonymous Auth.");
+                // 1. Try to Login first
+                await signInWithEmailAndPassword(window.auth, email, pass);
+                // If successful, onAuthStateChanged will handle the rest
+            } catch (e) {
+                console.log("Login failed, trying signup...", e.code);
+                
+                // 2. If user not found, try to Create Account
+                if(e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential' || e.code === 'auth/wrong-password') {
+                    try {
+                        const cred = await createUserWithEmailAndPassword(window.auth, email, pass);
+                        // If successful, flow moves to creator
+                        document.getElementById('authBox').classList.add('hidden');
+                        document.getElementById('creatorBox').classList.remove('hidden');
+                        window.setTab('skin');
+                        renderOptions('skin');
+                        window.updateSignupPreview();
+                    } catch (createErr) {
+                        console.error("Signup error:", createErr);
+                        if (createErr.code === 'auth/email-already-in-use') {
+                            alert("هذا البريد مسجل بالفعل، لكن كلمة المرور غير صحيحة.");
+                        } else if (createErr.code === 'auth/operation-not-allowed') {
+                            alert("⚠️ هام جداً: يجب تفعيل خدمة Email/Password في موقع فايربيس (Authentication > Sign-in method)");
+                        } else if (createErr.code === 'auth/weak-password') {
+                            alert("كلمة المرور ضعيفة جداً.");
+                        } else {
+                            alert("خطأ في الإنشاء: " + createErr.message);
+                        }
+                    }
+                } else {
+                    alert("خطأ في الدخول: " + e.message);
+                }
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
             }
         }
 
-        // دوال الواجهة
-        window.addCompetitor = function() {
-            const name = document.getElementById('newName').value.trim();
-            if (!name) return;
-            window.competitors.push({ id: Date.now(), name, points: parseInt(document.getElementById('newPoints').value)||0, image: window.tempImageBase64 });
-            saveDataToCloud();
-            document.getElementById('newName').value = '';
-            document.getElementById('newPoints').value = '';
-            window.tempImageBase64 = null;
-            document.getElementById('previewImg').classList.add('hidden');
-            document.getElementById('uploadIcon').classList.remove('hidden');
+        window.saveNewCharacter = async function() {
+            const name = document.getElementById('signupName').value.trim();
+            if (!name) return alert("الرجاء كتابة الاسم");
+
+            const newComp = { 
+                id: window.currentUser.uid, // Link to Auth ID
+                name: name, 
+                points: 0, 
+                avatar: { ...window.avatarState },
+                miracle: window.selectedMiracle
+            };
+
+            // Check if already exists (to prevent duplicates)
+            const exists = window.competitors.find(c => c.id === window.currentUser.uid);
+            
+            try {
+                if(exists) {
+                    // Update existing
+                    const updatedTeams = window.competitors.map(c => c.id === window.currentUser.uid ? newComp : c);
+                    await updateDoc(doc(window.db, "competitions", DOC_ID), { teams: updatedTeams });
+                } else {
+                    // Add new
+                    await updateDoc(doc(window.db, "competitions", DOC_ID), { teams: arrayUnion(newComp) });
+                }
+                document.getElementById('signupModal').classList.add('hidden');
+            } catch (e) {
+                alert("فشل الحفظ: " + e.message);
+            }
         }
 
-        window.changePoints = function(id, d) { const c = window.competitors.find(x => x.id === id); if(c) { c.points += d; saveDataToCloud(); } }
-        window.manualEditPoints = function(id, v) { const c = window.competitors.find(x => x.id === id); if(c) { c.points = parseInt(v)||0; saveDataToCloud(); } }
+        function checkPassAnimation(prev, curr) {
+            if (prev.length === 0) return;
+            const prevSorted = [...prev].sort((a,b) => b.points - a.points);
+            const currSorted = [...curr].sort((a,b) => b.points - a.points);
+
+            currSorted.forEach((c, idx) => {
+                const oldIdx = prevSorted.findIndex(p => p.id === c.id);
+                if (oldIdx !== -1 && idx < oldIdx) {
+                    setTimeout(() => {
+                        const row = document.getElementById(`row-${c.id}`);
+                        if (row) {
+                            row.classList.add('pass-anim');
+                            setTimeout(() => row.classList.remove('pass-anim'), 800);
+                        }
+                    }, 100);
+                }
+            });
+        }
+
+        window.saveDataToCloud = async function() {
+            if (!window.db) return;
+            await updateDoc(doc(window.db, "competitions", DOC_ID), { teams: window.competitors });
+        }
+
+        window.saveVerseFromAdmin = async function() {
+            if (!window.isAdmin) return alert("ليس لديك صلاحية");
+            const txt = document.getElementById('adminVerseInput').value;
+            if (!window.db) return;
+            await updateDoc(doc(window.db, "competitions", DOC_ID), { verse: txt });
+            alert("تم النشر بنجاح");
+        }
+
+        window.saveVerse = async function() { window.saveVerseFromAdmin(); }
+
+        window.setTab = function(tabName) {
+            document.querySelectorAll('.creator-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            renderOptions(tabName);
+        }
+
+        function renderOptions(type) {
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+            container.className = (type === 'miracle') ? "grid grid-cols-2 gap-3 p-2" : "option-grid";
+
+            if (type === 'skin') {
+                ASSETS.skinColors.forEach(c => {
+                    container.innerHTML += `<div class="color-dot ${window.avatarState.skinColor === c ? 'selected' : ''}" style="background:${c}" onclick="setAvatarProp('skinColor', '${c}')"></div>`;
+                });
+            } else if (type === 'hair') {
+                container.innerHTML = `<div class="col-span-full text-xs text-gray-400 mb-1 w-full text-center">لون الشعر</div>`;
+                const colorDiv = document.createElement('div'); colorDiv.className = "option-grid mb-4 col-span-full";
+                ASSETS.hairColors.forEach(c => {
+                    colorDiv.innerHTML += `<div class="color-dot ${window.avatarState.hairColor === c ? 'selected' : ''}" style="background:${c}" onclick="setAvatarProp('hairColor', '${c}')"></div>`;
+                });
+                container.appendChild(colorDiv);
+                
+                PATHS.hair.forEach((_, i) => {
+                    const tempState = {...window.avatarState, hairStyle: i};
+                    container.innerHTML += `<div class="item-btn ${window.avatarState.hairStyle === i ? 'selected' : ''}" onclick="setAvatarProp('hairStyle', ${i})"><div class="w-10 h-10 overflow-hidden relative">${window.getAvatarSVG(tempState)}</div></div>`;
+                });
+            } else if (type === 'clothes') {
+                container.innerHTML = `<div class="col-span-full text-xs text-gray-400 mb-1 w-full text-center">لون الملابس</div>`;
+                const colorDiv = document.createElement('div'); colorDiv.className = "option-grid mb-4 col-span-full";
+                ASSETS.clothesColors.forEach(c => {
+                    colorDiv.innerHTML += `<div class="color-dot ${window.avatarState.clothesColor === c ? 'selected' : ''}" style="background:${c}" onclick="setAvatarProp('clothesColor', '${c}')"></div>`;
+                });
+                container.appendChild(colorDiv);
+                
+                PATHS.clothes.forEach((_, i) => {
+                    const tempState = {...window.avatarState, clothesStyle: i};
+                    container.innerHTML += `<div class="item-btn ${window.avatarState.clothesStyle === i ? 'selected' : ''}" onclick="setAvatarProp('clothesStyle', ${i})"><div class="w-10 h-10 overflow-hidden relative">${window.getAvatarSVG(tempState)}</div></div>`;
+                });
+            } else if (type === 'eyes') {
+                PATHS.eyes.forEach((_, i) => {
+                    const tempState = {...window.avatarState, eyeStyle: i};
+                    container.innerHTML += `<div class="item-btn ${window.avatarState.eyeStyle === i ? 'selected' : ''}" onclick="setAvatarProp('eyeStyle', ${i})"><div class="w-10 h-10 overflow-hidden relative scale-150 origin-center">${window.getAvatarSVG(tempState)}</div></div>`;
+                });
+            } else if (type === 'mouth') {
+                PATHS.mouths.forEach((_, i) => {
+                    const tempState = {...window.avatarState, mouthStyle: i};
+                    container.innerHTML += `<div class="item-btn ${window.avatarState.mouthStyle === i ? 'selected' : ''}" onclick="setAvatarProp('mouthStyle', ${i})"><div class="w-10 h-10 overflow-hidden relative scale-150 origin-center">${window.getAvatarSVG(tempState)}</div></div>`;
+                });
+            } else if (type === 'miracle') {
+                ASSETS.miracles.forEach(m => {
+                    const isSelected = window.selectedMiracle === m.id;
+                    container.innerHTML += `
+                        <div onclick="selectMiracle('${m.id}', '${m.name}')" class="cursor-pointer p-4 rounded-xl border flex flex-col items-center justify-center gap-2 transition ${isSelected ? 'bg-amber-900/60 border-amber-400' : 'bg-slate-800 border-slate-700'}">
+                            <span class="text-4xl">${m.icon}</span>
+                            <span class="text-xs font-bold text-gray-300">${m.name}</span>
+                        </div>`;
+                });
+            }
+        }
+
+        window.setAvatarProp = function(key, val) {
+            window.avatarState[key] = val;
+            const currentTab = document.querySelector('.creator-tab.active').id.replace('tab-','');
+            renderOptions(currentTab); 
+            window.updateSignupPreview();
+        }
+
+        window.selectMiracle = function(id, name) {
+            window.selectedMiracle = id;
+            document.getElementById('signupMiracleName').textContent = name;
+            const m = ASSETS.miracles.find(x => x.id === id);
+            document.getElementById('signupMiracleIcon').textContent = m ? m.icon : '✨';
+            renderOptions('miracle');
+        }
+
         window.deleteCompetitor = function(id) { if(confirm('حذف؟')) { window.competitors = window.competitors.filter(c => c.id !== id); saveDataToCloud(); } }
-        window.deleteAllData = function() { if(confirm('حذف الكل؟')) { window.competitors = []; saveDataToCloud(); } }
+        window.changePoints = function(id, d) { const c = window.competitors.find(x => x.id === id); if(c) { c.points += d; saveDataToCloud(); } }
+        window.deleteAllData = function() { if(confirm('تحذير: هل أنت متأكد من حذف الجميع؟')) { window.competitors = []; saveDataToCloud(); } }
     </script>
 
     <script>
-        // UI Logic
-        const icons = {
-            fire: `<svg class="w-8 h-8 text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 22c4.97 0 9-4.03 9-9 0-4.97-9-13-9-13S3 8.03 3 13c0 4.97 4.03 9 9 9zm0-2c-3.87 0-7-3.13-7-7 0-2.26 3.14-6.42 5.71-9.69C11.54 4.3 12 3.71 12 3.71s.46.59 1.29 1.6C15.86 8.58 19 12.74 19 13c0 3.87-3.13 7-7 7z"/></svg>`,
-            tablets: `<svg class="w-8 h-8 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M6 2h12a2 2 0 012 2v18H4V4a2 2 0 012-2zm2 4v2h2V6H8zm4 0v2h2V6h-2zm-4 4v2h2v-2H8zm4 0v2h2v-2h-2zm-4 4v2h2v-2H8zm4 0v2h2v-2h-2zm-4 4v2h2v-2H8zm4 0v2h2v-2h-2z"/></svg>`,
-            staff: `<svg class="w-8 h-8 text-amber-600 transform rotate-12" fill="currentColor" viewBox="0 0 24 24"><path d="M5 22h2l1.5-5 .5-1.5L7 3h2l2 12.5.5 1.5L13 22h2l-2.5-7-2-13H8L6 15z"/></svg>`
-        };
+        function triggerMiracle(type) {
+            const overlay = document.getElementById('miracleOverlay');
+            overlay.classList.remove('hidden');
+            overlay.innerHTML = ''; 
+            document.body.style.overflow = 'hidden';
+
+            // Find transformation from assets
+            // Note: In module ASSETS is not global, so we define simple logic here or use data attributes
+            // Simple hardcoded map for animations
+            let content = '';
+            if(type === 'bush') content = `<div class="text-9xl animate-bounce">🔥🌳</div>`;
+            else if(type === 'snake') content = `<div class="text-[150px] transition-all duration-1000 transform rotate-12">🐍</div>`;
+            else if(type === 'blood') content = `<div class="absolute inset-0 bg-red-700/60 z-10 animate-pulse"></div><div class="z-20 text-9xl">🩸</div>`;
+            else if(type === 'sea') content = `<div class="flex w-full h-full"><div class="w-1/2 bg-blue-600/80 translate-x-[-100%] transition duration-1000 transform translate-x-0"></div><div class="w-1/2 bg-blue-600/80 translate-x-[100%] transition duration-1000 transform translate-x-0"></div></div>`;
+            else if(type === 'frog') content = `<div class="grid grid-cols-3 gap-10"><div class="text-8xl animate-bounce">🐸</div><div class="text-8xl animate-bounce delay-100">🐸</div><div class="text-8xl animate-bounce delay-200">🐸</div></div>`;
+            else content = `<div class="text-9xl animate-pulse">✨</div>`;
+
+            overlay.innerHTML = `<div class="flex items-center justify-center h-full w-full">${content}</div>`;
+
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                document.body.style.overflow = ''; 
+            }, 3000);
+        }
 
         function renderLeaderboard() {
             const list = document.getElementById('leaderboardList');
             list.innerHTML = '';
-            if (window.competitors.length === 0) { list.innerHTML = '<div class="text-center text-white/50 py-10">لا يوجد متسابقين بعد</div>'; return; }
-            window.competitors.forEach((c, index) => {
+            const sorted = [...window.competitors].sort((a,b) => b.points - a.points);
+
+            if (sorted.length === 0) { list.innerHTML = '<div class="text-center text-white/50 py-10">المسابقة بانتظار الأبطال...</div>'; return; }
+
+            sorted.forEach((c, index) => {
                 const rank = index + 1;
                 let rankClass = '', rankIcon = `<span class="text-xl font-bold number-en text-slate-500">#${rank}</span>`, glowClass = '';
-                if (rank === 1) { rankClass = 'rank-1'; rankIcon = icons.fire; glowClass = 'weekly-winner-glow'; }
-                else if (rank === 2) { rankClass = 'rank-2'; rankIcon = icons.tablets; }
-                else if (rank === 3) { rankClass = 'rank-3'; rankIcon = icons.staff; }
-                const imgDisplay = c.image ? `<img src="${c.image}" class="w-full h-full object-cover">` : `<div class="w-full h-full bg-slate-700 flex items-center justify-center text-slate-500 font-bold text-lg">${c.name.charAt(0)}</div>`;
-                list.insertAdjacentHTML('beforeend', `<div class="competitor-card flex items-center p-4 ${rankClass} ${glowClass}"><div class="w-16 flex justify-center items-center">${rankIcon}</div><div class="w-12 h-12 rounded-full overflow-hidden border-2 border-white/20 ml-4 shadow-lg shrink-0">${imgDisplay}</div><div class="flex-1 mr-4"><h3 class="text-lg md:text-xl font-bold text-white truncate">${c.name}</h3>${rank === 1 ? '<span class="text-[10px] text-amber-400 font-bold animate-pulse">متصدر الأسبوع</span>' : ''}</div><div class="w-24 text-center"><span class="text-2xl font-bold text-amber-400 number-en">${c.points}</span></div></div>`);
+                if (rank === 1) { rankClass = 'rank-1'; rankIcon = '<i class="fas fa-fire text-red-500 text-2xl animate-pulse"></i>'; glowClass = 'weekly-winner-glow'; }
+                else if (rank === 2) { rankClass = 'rank-2'; rankIcon = '<i class="fas fa-star text-yellow-400 text-xl"></i>'; }
+                else if (rank === 3) { rankClass = 'rank-3'; }
+
+                const avatarSvg = window.getAvatarSVG ? window.getAvatarSVG(c.avatar) : '';
+                // Get Base Icon
+                const miracleMap = { 'bush':'🌳', 'snake':'🪵', 'blood':'💧', 'sea':'🌊', 'frog':'⛲', 'light':'☁️', 'manna':'🧺' };
+                const baseIcon = miracleMap[c.miracle] || '✨';
+                
+                const isMe = window.currentUser && c.id === window.currentUser.uid;
+                const highlight = isMe ? 'border border-amber-400 bg-amber-900/20' : '';
+
+                const html = `
+                    <div id="row-${c.id}" class="competitor-card flex items-center p-2 rounded-xl bg-black/30 ${rankClass} ${glowClass} ${highlight} mb-3 shadow-lg transform transition hover:scale-[1.01]">
+                        <div class="w-10 flex justify-center items-center">${rankIcon}</div>
+                        <div class="w-20 h-20 -mt-2 big-head-wrapper drop-shadow-2xl">${avatarSvg}</div>
+                        <div class="flex-1 pr-4 text-right">
+                            <h3 class="text-lg md:text-xl font-bold text-white truncate drop-shadow-md">
+                                ${c.name}
+                                ${isMe ? '<span class="text-[10px] bg-amber-500 text-black px-1 rounded mr-2">أنا</span>' : ''}
+                            </h3>
+                        </div>
+                        <div class="w-20 flex justify-center pl-2">
+                            <button onclick="triggerMiracle('${c.miracle}')" class="miracle-btn text-3xl hover:scale-125 transition">
+                                ${baseIcon}
+                            </button>
+                        </div>
+                        <div class="w-16 text-center">
+                            <span class="text-2xl font-black text-amber-400 number-en drop-shadow-md">${c.points}</span>
+                        </div>
+                    </div>
+                `;
+                list.insertAdjacentHTML('beforeend', html);
             });
         }
 
         function renderAdminList() {
             const list = document.getElementById('adminList');
             list.innerHTML = '';
-            window.competitors.forEach((c) => {
-                list.insertAdjacentHTML('beforeend', `<div class="flex items-center justify-between bg-slate-900 p-3 rounded border border-slate-700"><div class="flex items-center gap-3 overflow-hidden flex-1"><div class="w-8 h-8 rounded-full bg-slate-700 overflow-hidden shrink-0">${c.image ? `<img src="${c.image}" class="w-full h-full object-cover">` : ''}</div><span class="truncate text-sm">${c.name}</span></div><div class="flex items-center gap-2"><button onclick="changePoints(${c.id}, -5)" class="w-8 h-8 bg-slate-700 rounded hover:bg-red-900 text-red-200 number-en font-bold">-5</button><input onchange="manualEditPoints(${c.id}, this.value)" type="number" value="${c.points}" class="w-14 bg-black border border-slate-600 rounded p-1 text-center text-amber-400 number-en text-sm"><button onclick="changePoints(${c.id}, 5)" class="w-8 h-8 bg-slate-700 rounded hover:bg-green-900 text-green-200 number-en font-bold">+5</button><button onclick="deleteCompetitor(${c.id})" class="w-8 h-8 ml-1 text-slate-500 hover:text-red-500"><i class="fas fa-trash"></i></button></div></div>`);
+            window.competitors.sort((a,b) => b.points - a.points).forEach((c) => {
+                list.insertAdjacentHTML('beforeend', `
+                    <div class="flex items-center justify-between bg-slate-900 p-2 rounded border border-slate-700 mb-2">
+                        <div class="flex items-center gap-2 overflow-hidden flex-1">
+                            <div class="w-8 h-8">${window.getAvatarSVG(c.avatar)}</div>
+                            <span class="truncate text-xs font-bold text-gray-300">${c.name}</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <button onclick="changePoints(${c.id}, -5)" class="w-6 h-6 bg-slate-700 rounded hover:bg-red-900 text-red-200 text-xs font-bold">-5</button>
+                            <span class="w-10 text-center text-amber-400 font-mono text-sm">${c.points}</span>
+                            <button onclick="changePoints(${c.id}, 5)" class="w-6 h-6 bg-slate-700 rounded hover:bg-green-900 text-green-200 text-xs font-bold">+5</button>
+                            <button onclick="deleteCompetitor(${c.id})" class="w-6 h-6 ml-1 text-slate-500 hover:text-red-500 text-xs"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                `);
             });
         }
 
-        function openAdminLogin() { 
-            // تفريغ خانة الباسورد عند الفتح لضمان عدم ظهور أي بيانات محفوظة
-            document.getElementById('adminPass').value = '';
-            document.getElementById('loginModal').classList.remove('hidden'); 
+        window.openAdminLogin = () => { document.getElementById('adminPass').value = ''; document.getElementById('loginModal').classList.remove('hidden'); }
+        window.closeModal = (id) => document.getElementById(id).classList.add('hidden');
+        window.checkLogin = () => { 
+            if (document.getElementById('adminPass').value === '1123') { 
+                window.isAdmin = true; 
+                window.closeModal('loginModal'); 
+                document.getElementById('adminModal').classList.remove('hidden'); 
+                renderAdminList(); 
+                if (document.getElementById('adminVerseInput')) document.getElementById('adminVerseInput').value = window.currentVerse;
+            } else { alert("خطأ"); } 
         }
-        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-        function checkLogin() { if (document.getElementById('adminPass').value === '1123') { closeModal('loginModal'); document.getElementById('adminPass').value = ''; document.getElementById('adminModal').classList.remove('hidden'); renderAdminList(); } else { alert("كلمة المرور غير صحيحة"); } }
-        window.tempImageBase64 = null;
-        window.handleImagePreview = function(input) { if (input.files && input.files[0]) { if(input.files[0].size > 150000) return alert("صورة كبيرة جداً!"); const reader = new FileReader(); reader.onload = (e) => { window.tempImageBase64 = e.target.result; document.getElementById('previewImg').src = window.tempImageBase64; document.getElementById('previewImg').classList.remove('hidden'); document.getElementById('uploadIcon').classList.add('hidden'); }; reader.readAsDataURL(input.files[0]); } }
-        window.toggleMusic = function() { const audio = document.getElementById('bgMusic'); const icon = document.getElementById('musicIcon'); if(audio.paused) { audio.play(); icon.className = 'fas fa-volume-up text-amber-400'; } else { audio.pause(); icon.className = 'fas fa-volume-mute text-white/50'; } }
+        window.openVerseModal = () => { document.getElementById('verseModal').classList.remove('hidden'); }
+        window.toggleMusic = () => { 
+            const a = document.getElementById('bgMusic'), i = document.getElementById('musicIcon'); 
+            if(a.paused) { a.play(); i.className = 'fas fa-volume-up text-amber-400'; } else { a.pause(); i.className = 'fas fa-volume-mute text-white/50'; } 
+        }
+        window.triggerMiracle = triggerMiracle;
     </script>
 </body>
 </html>
