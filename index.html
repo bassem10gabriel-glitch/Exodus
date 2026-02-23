@@ -88,13 +88,23 @@
         .leaderboard-item:hover {
             transform: translateY(-2px);
         }
+        
+        /* Toast Notification */
+        #toast {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
     </style>
 </head>
 <body class="text-gray-800">
 
     <!-- 1. Login Screen -->
     <div id="login-screen" class="screen active justify-center items-center p-4">
-        <div class="glass-panel rounded-2xl p-8 max-w-md w-full text-center">
+        <div class="glass-panel rounded-2xl p-8 max-w-md w-full text-center relative overflow-hidden">
+            <!-- Error Banner -->
+            <div id="critical-error-banner" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 text-sm text-right font-bold rounded">
+                <!-- Injected Error Text -->
+            </div>
+
             <h1 class="text-4xl font-bold text-amber-800 mb-2">رحلة الخروج</h1>
             <p class="text-gray-600 mb-6">سجل الدخول أو أنشئ حساباً بنقرة واحدة</p>
             
@@ -154,9 +164,11 @@
             </div>
         </main>
 
-        <!-- Hidden Admin Footer -->
-        <footer class="p-2 text-center text-xs text-amber-900/40 shrink-0 hover:text-amber-900/80 transition cursor-pointer" id="btn-open-admin">
-            إدارة (Admin)
+        <!-- Admin Footer -->
+        <footer class="p-4 text-center shrink-0 bg-white/50 border-t border-amber-200 cursor-pointer hover:bg-amber-100 transition" id="btn-open-admin">
+            <div class="text-sm font-bold text-amber-800/80 flex items-center justify-center gap-2">
+                <i class="fas fa-lock"></i> لوحة الإدارة (للمسؤولين لتغيير النقاط والرسائل)
+            </div>
         </footer>
     </div>
 
@@ -427,20 +439,31 @@
         </div>
     </div>
 
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 px-6 py-3 rounded-xl shadow-2xl transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-3 bg-gray-800 text-white pointer-events-none">
+        <i class="fas fa-info-circle" id="toast-icon"></i>
+        <span id="toast-msg" class="font-bold"></span>
+    </div>
+
     <script type="module">
         // --- 1. FIREBASE SETUP & RULES COMPLIANCE ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInAnonymously, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, deleteDoc, updateDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            // Dummy config for fallback if not injected
-            apiKey: "dummy", authDomain: "dummy", projectId: "dummy"
+        const firebaseConfig = {
+            apiKey: "AIzaSyAhqaIj8TBIwt_mWrWhppT1Wvny6WHci3g",
+            authDomain: "exodus2-80162.firebaseapp.com",
+            projectId: "exodus2-80162",
+            storageBucket: "exodus2-80162.firebasestorage.app",
+            messagingSenderId: "651550681077",
+            appId: "1:651550681077:web:4476b873ca3762939122bc"
         };
+        
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'exodus-app-3d';
+        const appId = 'exodus-app-3d';
 
         // Paths following MANDATORY RULE 1
         const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'users');
@@ -467,6 +490,26 @@
                 hair: '#3b2512',
                 clothes: '#3498db'
             }
+        };
+
+        // UI Error Handler Helper
+        function showCriticalError(title, steps) {
+            const banner = document.getElementById('critical-error-banner');
+            banner.innerHTML = `<strong>${title}</strong><ul class="list-disc pr-5 mt-2 text-xs">${steps}</ul>`;
+            banner.classList.remove('hidden');
+        }
+
+        // Global Toast Notification
+        window.showToast = function(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').textContent = msg;
+            toast.className = `fixed bottom-5 right-5 px-6 py-3 rounded-xl shadow-2xl transition-all duration-300 z-50 flex items-center gap-3 ${isError ? 'bg-red-600' : 'bg-green-600'} text-white`;
+            toast.style.transform = 'translateY(0)';
+            toast.style.opacity = '1';
+            setTimeout(() => {
+                toast.style.transform = 'translateY(20px)';
+                toast.style.opacity = '0';
+            }, 3000);
         };
 
         // --- 2. THREE.JS PROCEDURAL ENGINE ---
@@ -564,12 +607,12 @@
             // 1. SHAPE (Head)
             let headGeo;
             if (currentConfig.shape === 'round') {
-                headGeo = new THREE.SphereGeometry(0.4, 32, 32);
+                headGeo = new THREE.SphereGeometry(0.38, 32, 32);
             } else if (currentConfig.shape === 'oval') {
-                headGeo = new THREE.SphereGeometry(0.35, 32, 32);
-                headGeo.scale(1, 1.3, 1);
+                headGeo = new THREE.SphereGeometry(0.38, 32, 32);
+                headGeo.scale(0.85, 1.2, 1.0); // Z=1.0 prevents facial features clipping
             } else { // square
-                headGeo = new THREE.BoxGeometry(0.6, 0.6, 0.6);
+                headGeo = new THREE.BoxGeometry(0.65, 0.65, 0.76); // Depth 0.76 ensures front face matches round
             }
             const headMesh = new THREE.Mesh(headGeo, skinMat);
             headMesh.castShadow = true;
@@ -580,17 +623,14 @@
             bodyGroup.position.y = 0.7;
             characterGroup.add(bodyGroup);
 
-            let bodyWidth = 0.6;
-            let bodyDepth = 0.3;
-            if (currentConfig.body === 'slim') { bodyWidth = 0.45; bodyDepth = 0.2; }
-            if (currentConfig.body === 'chubby') { bodyWidth = 0.8; bodyDepth = 0.5; }
-            if (currentConfig.body === 'muscular') { bodyWidth = 0.8; bodyDepth = 0.4; } // wider top handled below
+            // Dynamic scaling to prevent clipping
+            let topRadius = 0.3;
+            let botRadius = 0.3;
+            if (currentConfig.body === 'slim') { topRadius = 0.22; botRadius = 0.22; }
+            if (currentConfig.body === 'chubby') { topRadius = 0.4; botRadius = 0.45; }
+            if (currentConfig.body === 'muscular') { topRadius = 0.45; botRadius = 0.25; }
 
-            let torsoGeo = new THREE.CylinderGeometry(
-                currentConfig.body === 'muscular' ? 0.4 : bodyWidth/2, 
-                bodyWidth/2, 
-                1.0, 32
-            );
+            let torsoGeo = new THREE.CylinderGeometry(topRadius, botRadius, 1.0, 32);
             
             let activeClothesMat = clothesMat;
             if(currentConfig.clothes === 'armor') activeClothesMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.7, roughness: 0.3 });
@@ -601,45 +641,45 @@
             torso.castShadow = true;
             bodyGroup.add(torso);
 
-            // Legs
+            // Legs based on botRadius
             const legGeo = new THREE.CylinderGeometry(0.15, 0.12, 0.8, 16);
             const legMat = currentConfig.clothes === 'pharaonic' ? whiteMat : (currentConfig.clothes === 'suit' ? activeClothesMat : darkMat);
             const legL = new THREE.Mesh(legGeo, legMat);
-            legL.position.set(-0.15, -0.9, 0);
+            legL.position.set(-botRadius/2 - 0.05, -0.9, 0);
             const legR = new THREE.Mesh(legGeo, legMat);
-            legR.position.set(0.15, -0.9, 0);
+            legR.position.set(botRadius/2 + 0.05, -0.9, 0);
             bodyGroup.add(legL, legR);
 
-            // Arms
+            // Arms based on topRadius
             const armGeo = new THREE.CylinderGeometry(0.12, 0.1, 0.8, 16);
             const armL = new THREE.Mesh(armGeo, currentConfig.clothes === 'pharaonic' ? skinMat : activeClothesMat);
-            armL.position.set(-bodyWidth/2 - 0.1, -0.2, 0);
+            armL.position.set(-topRadius - 0.1, -0.2, 0);
             armL.rotation.z = Math.PI / 8;
             const armR = new THREE.Mesh(armGeo, currentConfig.clothes === 'pharaonic' ? skinMat : activeClothesMat);
-            armR.position.set(bodyWidth/2 + 0.1, -0.2, 0);
+            armR.position.set(topRadius + 0.1, -0.2, 0);
             armR.rotation.z = -Math.PI / 8;
             bodyGroup.add(armL, armR);
 
             // Clothes specific details
             if (currentConfig.clothes === 'robe') {
-                const robeGeo = new THREE.CylinderGeometry(bodyWidth/2, bodyWidth/2 + 0.2, 0.9, 32);
+                const robeGeo = new THREE.CylinderGeometry(botRadius, botRadius + 0.2, 0.9, 32);
                 const robe = new THREE.Mesh(robeGeo, activeClothesMat);
                 robe.position.y = -0.8;
                 bodyGroup.add(robe);
             } else if (currentConfig.clothes === 'armor') {
                 const padGeo = new THREE.SphereGeometry(0.2, 16, 16);
                 const padL = new THREE.Mesh(padGeo, activeClothesMat);
-                padL.position.set(-bodyWidth/2 - 0.1, 0.4, 0);
+                padL.position.set(-topRadius - 0.1, 0.4, 0);
                 const padR = new THREE.Mesh(padGeo, activeClothesMat);
-                padR.position.set(bodyWidth/2 + 0.1, 0.4, 0);
+                padR.position.set(topRadius + 0.1, 0.4, 0);
                 bodyGroup.add(padL, padR);
             } else if (currentConfig.clothes === 'pharaonic') {
-                const skirtGeo = new THREE.CylinderGeometry(bodyWidth/2 + 0.05, bodyWidth/2 + 0.15, 0.5, 32);
+                const skirtGeo = new THREE.CylinderGeometry(botRadius + 0.02, botRadius + 0.15, 0.5, 32);
                 const skirt = new THREE.Mesh(skirtGeo, whiteMat);
                 skirt.position.y = -0.5;
                 bodyGroup.add(skirt);
                 // Usekh collar
-                const collarGeo = new THREE.TorusGeometry(0.25, 0.08, 16, 32);
+                const collarGeo = new THREE.TorusGeometry(topRadius + 0.05, 0.08, 16, 32);
                 const collar = new THREE.Mesh(collarGeo, goldMat);
                 collar.rotation.x = Math.PI / 2;
                 collar.position.y = 0.45;
@@ -647,17 +687,19 @@
             } else if (currentConfig.clothes === 'suit') {
                 const tieGeo = new THREE.BoxGeometry(0.08, 0.4, 0.05);
                 const tie = new THREE.Mesh(tieGeo, new THREE.MeshStandardMaterial({color: 0x880000}));
-                tie.position.set(0, 0.1, 0.18);
+                const tieZ = ((topRadius + botRadius) / 2) + 0.02;
+                tie.position.set(0, 0.1, tieZ);
                 bodyGroup.add(tie);
             }
 
             // 3. HAIR
             if (currentConfig.hair !== 'none') {
                 if (currentConfig.hair === 'headdress') {
-                    const hdGeo = new THREE.CylinderGeometry(0.42, 0.5, 0.8, 32, 1, false, 0, Math.PI);
-                    const hdMat = new THREE.MeshStandardMaterial({color: 0x1e3a8a}); // Blueish
+                    // Start at angle 72 deg, sweep through the back, end at 288 deg (frames the face perfectly)
+                    const hdGeo = new THREE.CylinderGeometry(0.42, 0.55, 0.8, 32, 1, false, Math.PI * 0.4, Math.PI * 1.2);
+                    const hdMat = new THREE.MeshStandardMaterial({color: 0x1e3a8a});
                     const hd = new THREE.Mesh(hdGeo, hdMat);
-                    hd.position.set(0, 0.1, -0.05);
+                    hd.position.set(0, 0.1, 0);
                     headGroup.add(hd);
                     
                     const hdBand = new THREE.TorusGeometry(0.41, 0.05, 16, 32);
@@ -666,14 +708,14 @@
                     band.position.y = 0.2;
                     headGroup.add(band);
                 } else if (currentConfig.hair === 'short') {
-                    const hGeo = new THREE.SphereGeometry(0.42, 32, 32, 0, Math.PI*2, 0, Math.PI/2);
+                    const hGeo = new THREE.SphereGeometry(0.39, 32, 32, 0, Math.PI*2, 0, Math.PI/2);
                     const hMesh = new THREE.Mesh(hGeo, hairMat);
-                    hMesh.position.y = 0.05;
+                    hMesh.position.y = 0.02;
                     headGroup.add(hMesh);
                 } else if (currentConfig.hair === 'spiky') {
-                    const hGeo = new THREE.SphereGeometry(0.4, 32, 32, 0, Math.PI*2, 0, Math.PI/2);
+                    const hGeo = new THREE.SphereGeometry(0.39, 32, 32, 0, Math.PI*2, 0, Math.PI/2);
                     const hMesh = new THREE.Mesh(hGeo, hairMat);
-                    hMesh.position.y = 0.05;
+                    hMesh.position.y = 0.02;
                     headGroup.add(hMesh);
                     for(let i=0; i<15; i++) {
                         const spike = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.25, 8), hairMat);
@@ -683,7 +725,6 @@
                         headGroup.add(spike);
                     }
                 } else if (currentConfig.hair === 'curly') {
-                    // Fix curly: small spheres around head
                     for(let i=0; i<30; i++) {
                         const curl = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), hairMat);
                         const angle1 = Math.random() * Math.PI * 2;
@@ -693,7 +734,7 @@
                         headGroup.add(curl);
                     }
                 } else if (currentConfig.hair === 'ponytail') {
-                    const base = new THREE.Mesh(new THREE.SphereGeometry(0.42, 32, 32, 0, Math.PI*2, 0, Math.PI/2.5), hairMat);
+                    const base = new THREE.Mesh(new THREE.SphereGeometry(0.39, 32, 32, 0, Math.PI*2, 0, Math.PI/2.5), hairMat);
                     headGroup.add(base);
                     const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.02, 0.5), hairMat);
                     tail.position.set(0, 0, -0.4);
@@ -709,8 +750,7 @@
                     hMesh.position.set(0, 0.45, 0);
                     headGroup.add(hMesh);
                 } else {
-                    // Fallback for long, bob, messy
-                    const hGeo = new THREE.SphereGeometry(0.43, 32, 32, 0, Math.PI*2, 0, Math.PI/1.8);
+                    const hGeo = new THREE.SphereGeometry(0.40, 32, 32, 0, Math.PI*2, 0, Math.PI/1.8);
                     const hMesh = new THREE.Mesh(hGeo, hairMat);
                     if(currentConfig.hair === 'long') hMesh.scale.set(1, 1.5, 1);
                     headGroup.add(hMesh);
@@ -723,24 +763,25 @@
             if(currentConfig.eyes === 'wide') { eyeGeo.scale(1.5, 1.5, 1.5); pupilScale = 0.02; }
             if(currentConfig.eyes === 'sleepy') { eyeGeo.scale(1, 0.5, 1); }
             
+            // Placed precisely to float on the 0.38 Z limit
             const eyeL = new THREE.Mesh(eyeGeo, whiteMat);
-            eyeL.position.set(-0.15, 0.1, 0.35);
+            eyeL.position.set(-0.15, 0.1, 0.36);
             const eyeR = new THREE.Mesh(eyeGeo, whiteMat);
-            eyeR.position.set(0.15, 0.1, 0.35);
+            eyeR.position.set(0.15, 0.1, 0.36);
             
             const pupilGeo = new THREE.SphereGeometry(pupilScale, 16, 16);
             const pupilL = new THREE.Mesh(pupilGeo, darkMat);
-            pupilL.position.set(-0.15, 0.1, 0.41);
+            pupilL.position.set(-0.15, 0.1, 0.40);
             const pupilR = new THREE.Mesh(pupilGeo, darkMat);
-            pupilR.position.set(0.15, 0.1, 0.41);
+            pupilR.position.set(0.15, 0.1, 0.40);
 
             if(currentConfig.eyes === 'angry') {
                 const browGeo = new THREE.BoxGeometry(0.15, 0.03, 0.05);
                 const browL = new THREE.Mesh(browGeo, darkMat);
-                browL.position.set(-0.15, 0.2, 0.38);
+                browL.position.set(-0.15, 0.2, 0.42);
                 browL.rotation.z = -0.2;
                 const browR = new THREE.Mesh(browGeo, darkMat);
-                browR.position.set(0.15, 0.2, 0.38);
+                browR.position.set(0.15, 0.2, 0.42);
                 browR.rotation.z = 0.2;
                 headGroup.add(browL, browR);
             }
@@ -752,7 +793,7 @@
                 const mGeo = new THREE.TorusGeometry(0.1, 0.02, 16, 32, Math.PI);
                 mouthMesh = new THREE.Mesh(mGeo, currentConfig.mouth === 'laugh' ? new THREE.MeshStandardMaterial({color:0x550000}) : darkMat);
                 mouthMesh.rotation.z = Math.PI;
-                mouthMesh.position.set(0, -0.1, 0.38);
+                mouthMesh.position.set(0, -0.1, 0.39);
             } else if (currentConfig.mouth === 'open') {
                 mouthMesh = new THREE.Mesh(new THREE.CircleGeometry(0.06, 16), darkMat);
                 mouthMesh.position.set(0, -0.15, 0.39);
@@ -767,42 +808,42 @@
             if(accs.includes('crown')) {
                 const cGeo = new THREE.CylinderGeometry(0.3, 0.25, 0.2, 16, 1, true);
                 const crown = new THREE.Mesh(cGeo, goldMat);
-                crown.position.set(0, 0.45, 0);
+                crown.position.set(0, 0.48, 0); // slightly higher
                 headGroup.add(crown);
             }
             if(accs.includes('hat')) {
                 const hGeo = new THREE.ConeGeometry(0.4, 0.4, 32);
                 const hat = new THREE.Mesh(hGeo, darkMat);
-                hat.position.set(0, 0.5, 0);
+                hat.position.set(0, 0.55, 0);
                 const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 0.05, 32), darkMat);
-                brim.position.set(0, 0.3, 0);
+                brim.position.set(0, 0.35, 0);
                 headGroup.add(hat, brim);
             }
             if(accs.includes('halo')) {
                 const halo = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.03, 16, 32), goldMat);
                 halo.rotation.x = Math.PI/2;
-                halo.position.set(0, 0.7, 0);
+                halo.position.set(0, 0.8, 0);
                 headGroup.add(halo);
             }
             if(accs.includes('glasses') || accs.includes('sunglasses')) {
                 const gMat = accs.includes('sunglasses') ? darkMat : new THREE.MeshStandardMaterial({color:0x111111, wireframe: true});
                 const gGeo = new THREE.TorusGeometry(0.12, 0.02, 8, 32);
-                const gl = new THREE.Mesh(gGeo, gMat); gl.position.set(-0.15, 0.1, 0.42);
-                const gr = new THREE.Mesh(gGeo, gMat); gr.position.set(0.15, 0.1, 0.42);
+                const gl = new THREE.Mesh(gGeo, gMat); gl.position.set(-0.15, 0.1, 0.43);
+                const gr = new THREE.Mesh(gGeo, gMat); gr.position.set(0.15, 0.1, 0.43);
                 const bridge = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.02, 0.02), darkMat);
-                bridge.position.set(0, 0.1, 0.42);
+                bridge.position.set(0, 0.1, 0.43);
                 headGroup.add(gl, gr, bridge);
-                if(accs.includes('sunglasses')) { // fill frames
+                if(accs.includes('sunglasses')) {
                     const fill = new THREE.Mesh(new THREE.CircleGeometry(0.11, 16), darkMat);
-                    fill.position.set(-0.15, 0.1, 0.42);
-                    const fill2 = fill.clone(); fill2.position.set(0.15, 0.1, 0.42);
+                    fill.position.set(-0.15, 0.1, 0.425);
+                    const fill2 = fill.clone(); fill2.position.set(0.15, 0.1, 0.425);
                     headGroup.add(fill, fill2);
                 }
             }
             if(accs.includes('beard')) {
                 const bGeo = new THREE.BoxGeometry(0.4, 0.2, 0.2);
                 const beard = new THREE.Mesh(bGeo, hairMat);
-                beard.position.set(0, -0.3, 0.3);
+                beard.position.set(0, -0.3, 0.38);
                 headGroup.add(beard);
             }
             if(accs.includes('headphones')) {
@@ -815,35 +856,39 @@
                 const cup2 = cup.clone(); cup2.position.set(0.45, 0, 0);
                 headGroup.add(band, cup, cup2);
             }
+            
+            // Body Accessories calculate based on body radius to avoid clipping
+            const backZ = -((topRadius + botRadius) / 2);
+
             if(accs.includes('cape')) {
                 const cape = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.2, 0.05), new THREE.MeshStandardMaterial({color: 0xaa0000}));
-                cape.position.set(0, -0.2, -0.25);
+                cape.position.set(0, -0.2, backZ - 0.05);
                 cape.rotation.x = -0.1;
                 bodyGroup.add(cape);
             }
             if(accs.includes('backpack')) {
                 const pack = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.6, 0.25), new THREE.MeshStandardMaterial({color: 0x8b4513}));
-                pack.position.set(0, 0, -0.3);
+                pack.position.set(0, 0, backZ - 0.15);
                 bodyGroup.add(pack);
             }
             if(accs.includes('wings')) {
                 const wingGeo = new THREE.ConeGeometry(0.3, 1.2, 4);
                 const wingL = new THREE.Mesh(wingGeo, whiteMat);
-                wingL.position.set(-0.4, 0, -0.2); wingL.rotation.z = Math.PI/4;
+                wingL.position.set(-0.35, 0, backZ - 0.05); wingL.rotation.z = Math.PI/4;
                 const wingR = new THREE.Mesh(wingGeo, whiteMat);
-                wingR.position.set(0.4, 0, -0.2); wingR.rotation.z = -Math.PI/4;
+                wingR.position.set(0.35, 0, backZ - 0.05); wingR.rotation.z = -Math.PI/4;
                 bodyGroup.add(wingL, wingR);
             }
             if(accs.includes('scarf')) {
-                const scarf = new THREE.Mesh(new THREE.TorusGeometry(0.35, 0.08, 16, 32), new THREE.MeshStandardMaterial({color: 0xcc0000}));
+                const scarf = new THREE.Mesh(new THREE.TorusGeometry(topRadius + 0.1, 0.08, 16, 32), new THREE.MeshStandardMaterial({color: 0xcc0000}));
                 scarf.rotation.x = Math.PI/2;
-                scarf.position.set(0, 0.6, 0);
+                scarf.position.set(0, 0.55, 0);
                 bodyGroup.add(scarf);
             }
             if(accs.includes('staff')) {
                 const staffGeo = new THREE.CylinderGeometry(0.03, 0.02, 2.0, 8);
                 const staff = new THREE.Mesh(staffGeo, new THREE.MeshStandardMaterial({color: 0x5c4033}));
-                staff.position.set(bodyWidth/2 + 0.3, -0.5, 0.2);
+                staff.position.set(topRadius + 0.3, -0.5, 0.2);
                 staff.rotation.x = Math.PI/12;
                 bodyGroup.add(staff);
             }
@@ -945,30 +990,44 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحميل...';
             loginError.classList.add('hidden');
+            document.getElementById('critical-error-banner').classList.add('hidden');
 
             try {
                 // Try Login
                 await signInWithEmailAndPassword(auth, email, pass);
                 // Success handled by onAuthStateChanged
             } catch (error) {
-                console.error("Firebase Login Error:", error); // Debugging info in console
+                console.error("Firebase Login Error:", error);
                 
                 if (error.code === 'auth/operation-not-allowed') {
                     // Fallback to anonymous auth if Email/Password is not enabled
-                    console.warn("Email/Password auth is disabled in Firebase. Falling back to Anonymous Auth for testing.");
+                    console.warn("Email/Password auth disabled. Falling back to Anonymous Auth.");
                     try {
                         const userCred = await signInAnonymously(auth);
                         isFirstTime = true;
-                        await setDoc(doc(usersRef, userCred.user.uid), {
-                            uid: userCred.user.uid,
-                            email: email, // Use typed email for leaderboard display
-                            score: 0,
-                            avatarConfig: currentConfig,
-                            avatarSnapshot: null
-                        });
+                        
+                        try {
+                            await setDoc(doc(usersRef, userCred.user.uid), {
+                                uid: userCred.user.uid,
+                                email: email,
+                                score: 0,
+                                avatarConfig: currentConfig,
+                                avatarSnapshot: null
+                            });
+                        } catch (dbErr) {
+                            console.error("Firestore Permission Error during Anon Login:", dbErr);
+                            throw new Error("firestore-permissions");
+                        }
+                        
                     } catch (anonErr) {
-                        loginError.textContent = "حدث خطأ في النظام: برجاء تفعيل Email/Password في إعدادات Firebase.";
-                        loginError.classList.remove('hidden');
+                        if (anonErr.message === "firestore-permissions" || (anonErr.code && anonErr.code.includes('permission'))) {
+                            showCriticalError("مرفوض! (صلاحيات Firestore مغلقة)", "<li>اذهب إلى Firebase Console</li><li>اختر Firestore Database</li><li>اضغط على Rules (القواعد)</li><li>ضع الكود التالي للحفظ: <code>allow read, write: if true;</code></li>");
+                        } else if (anonErr.code === 'auth/operation-not-allowed') {
+                            showCriticalError("تسجيل الدخول معطل تماماً!", "<li>اذهب إلى Firebase Console</li><li>اختر Authentication</li><li>اختر Sign-in method</li><li>قم بتفعيل Email/Password أو Anonymous</li>");
+                        } else {
+                            loginError.textContent = "حدث خطأ غير متوقع.";
+                            loginError.classList.remove('hidden');
+                        }
                         btn.disabled = false;
                         btn.innerHTML = '<span>دخول / ابدأ الرحلة</span><i class="fas fa-arrow-left mr-2"></i>';
                     }
@@ -976,18 +1035,26 @@
                     try {
                         const userCred = await createUserWithEmailAndPassword(auth, email, pass);
                         isFirstTime = true;
-                        // Initialize user doc
-                        await setDoc(doc(usersRef, userCred.user.uid), {
-                            uid: userCred.user.uid,
-                            email: email,
-                            score: 0,
-                            avatarConfig: currentConfig,
-                            avatarSnapshot: null
-                        });
+                        try {
+                            // Initialize user doc
+                            await setDoc(doc(usersRef, userCred.user.uid), {
+                                uid: userCred.user.uid,
+                                email: email,
+                                score: 0,
+                                avatarConfig: currentConfig,
+                                avatarSnapshot: null
+                            });
+                        } catch (dbErr) {
+                            console.error("Firestore Permission Error during Signup:", dbErr);
+                            throw new Error("firestore-permissions");
+                        }
                     } catch (createErr) {
-                        console.error("Firebase Signup Error:", createErr);
-                        loginError.textContent = "خطأ في إنشاء الحساب: " + (createErr.code === 'auth/email-already-in-use' ? 'البريد مسجل مسبقاً بكلمة مرور مختلفة' : createErr.message);
-                        loginError.classList.remove('hidden');
+                        if (createErr.message === "firestore-permissions" || (createErr.code && createErr.code.includes('permission'))) {
+                            showCriticalError("الحساب تم إنشاؤه ولكن (صلاحيات Firestore مغلقة)", "<li>اذهب إلى Firebase Console</li><li>اختر Firestore Database</li><li>اضغط على Rules (القواعد)</li><li>ضع الكود: <code>allow read, write: if true;</code></li>");
+                        } else {
+                            loginError.textContent = "خطأ في إنشاء الحساب: " + (createErr.code === 'auth/email-already-in-use' ? 'البريد مسجل مسبقاً بكلمة مرور مختلفة' : createErr.message);
+                            loginError.classList.remove('hidden');
+                        }
                         btn.disabled = false;
                         btn.innerHTML = '<span>دخول / ابدأ الرحلة</span><i class="fas fa-arrow-left mr-2"></i>';
                     }
@@ -1016,12 +1083,16 @@
                 document.getElementById('login-btn').disabled = false;
                 document.getElementById('login-btn').innerHTML = '<span>دخول / ابدأ الرحلة</span><i class="fas fa-arrow-left mr-2"></i>';
                 
-                // Fetch User Data
-                const docSnap = await getDoc(doc(usersRef, user.uid));
-                if(docSnap.exists()){
-                    userData = docSnap.data();
-                    if(userData.avatarConfig) currentConfig = userData.avatarConfig;
-                    document.getElementById('current-user-score').textContent = userData.score || 0;
+                try {
+                    // Fetch User Data
+                    const docSnap = await getDoc(doc(usersRef, user.uid));
+                    if(docSnap.exists()){
+                        userData = docSnap.data();
+                        if(userData.avatarConfig) currentConfig = userData.avatarConfig;
+                        document.getElementById('current-user-score').textContent = userData.score || 0;
+                    }
+                } catch (dbErr) {
+                    console.error("Firestore read error:", dbErr);
                 }
 
                 if (isFirstTime || !userData?.avatarSnapshot) {
@@ -1063,7 +1134,12 @@
                 const me = allUsers.find(u => u.uid === currentUser.uid);
                 if(me) document.getElementById('current-user-score').textContent = me.score || 0;
 
-            }, (error) => console.error("Error fetching users:", error));
+            }, (error) => {
+                console.error("Error fetching users:", error);
+                if(error.code === 'permission-denied') {
+                    alert("قاعدة البيانات مغلقة. يرجى تعديل Firestore Rules.");
+                }
+            });
 
             // Listen to settings for Broadcast
             unsubscribeSettings = onSnapshot(doc(settingsRef, 'global'), (docSnap) => {
@@ -1074,30 +1150,47 @@
                         document.getElementById('msg-indicator').classList.remove('hidden'); // Ping!
                     }
                 }
-            }, (error) => console.error("Error fetching settings:", error));
+            }, (error) => {
+                console.error("Error fetching settings:", error);
+            });
         }
 
         // --- SAVING AVATAR (Performance focused snapshot) ---
         document.getElementById('btn-save-character').addEventListener('click', async () => {
+            if (!currentUser) {
+                showToast("يرجى تسجيل الدخول أولاً!", true);
+                return;
+            }
+
             const btn = document.getElementById('btn-save-character');
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i> جاري الحفظ...';
 
             // Ensure rendering is up to date, reset rotation for a clear snapshot
+            const prevRotation = characterGroup.rotation.y;
             characterGroup.rotation.y = 0;
             renderer.render(scene, camera);
             
             // Capture Snapshot
             const snapshotBase64 = renderer.domElement.toDataURL("image/png", 0.9);
+            characterGroup.rotation.y = prevRotation;
 
             try {
-                await updateDoc(doc(usersRef, currentUser.uid), {
+                // Using setDoc with merge:true is safer than updateDoc to avoid "document not found" errors
+                await setDoc(doc(usersRef, currentUser.uid), {
                     avatarConfig: currentConfig,
                     avatarSnapshot: snapshotBase64
-                });
+                }, { merge: true });
+                
                 showScreen('main-screen');
+                showToast("تم حفظ الشخصية بنجاح!");
             } catch (error) {
-                alert("حدث خطأ أثناء الحفظ.");
+                console.error("Save Error:", error);
+                if(error.code === 'permission-denied') {
+                    showToast("خطأ: صلاحيات الكتابة في Firestore مغلقة (Rules).", true);
+                } else {
+                    showToast("حدث خطأ أثناء الحفظ. تأكد من اتصالك بالإنترنت.", true);
+                }
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-save ml-2"></i> حفظ وعودة';
@@ -1171,7 +1264,7 @@
                 showScreen('admin-screen');
                 document.getElementById('admin-broadcast-msg').value = broadcastMsg;
             } else {
-                alert("كلمة المرور خاطئة");
+                showToast("كلمة المرور خاطئة", true);
             }
         });
 
@@ -1184,20 +1277,20 @@
             const user = allUsers.find(u => u.uid === uid);
             if(user) {
                 await updateDoc(doc(usersRef, uid), { score: (user.score || 0) + pts });
+                showToast("تم تحديث النقاط بنجاح");
             }
         };
 
         window.adminKick = async (uid) => {
-            if(confirm("هل أنت متأكد من إزالة هذا المستخدم من اللوحة؟ (يمكنه العودة عند حفظ الشخصية مجدداً)")) {
-                await deleteDoc(doc(usersRef, uid));
-            }
+            await deleteDoc(doc(usersRef, uid));
+            showToast("تم إزالة المستخدم من اللوحة");
         };
 
         document.getElementById('btn-save-broadcast').addEventListener('click', async () => {
             const msg = document.getElementById('admin-broadcast-msg').value.trim();
             if(msg) {
                 await setDoc(doc(settingsRef, 'global'), { broadcastMessage: msg }, { merge: true });
-                alert("تم نشر الرسالة");
+                showToast("تم نشر الرسالة للجميع بنجاح!");
             }
         });
 
