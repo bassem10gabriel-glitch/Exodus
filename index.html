@@ -1012,7 +1012,8 @@
                                 email: email,
                                 score: 0,
                                 avatarConfig: currentConfig,
-                                avatarSnapshot: null
+                                avatarSnapshot: null,
+                                isKicked: false
                             });
                         } catch (dbErr) {
                             console.error("Firestore Permission Error during Anon Login:", dbErr);
@@ -1042,7 +1043,8 @@
                                 email: email,
                                 score: 0,
                                 avatarConfig: currentConfig,
-                                avatarSnapshot: null
+                                avatarSnapshot: null,
+                                isKicked: false
                             });
                         } catch (dbErr) {
                             console.error("Firestore Permission Error during Signup:", dbErr);
@@ -1090,6 +1092,10 @@
                         userData = docSnap.data();
                         if(userData.avatarConfig) currentConfig = userData.avatarConfig;
                         document.getElementById('current-user-score').textContent = userData.score || 0;
+                        
+                        if (userData.isKicked) {
+                            showToast("حسابك موقوف ومطرود من المسابقة.", true);
+                        }
                     } else {
                         // Self-healing: Create missing document if auth exists but DB doc failed to create previously
                         const fallbackEmail = user.email || document.getElementById('email').value.trim() || 'متسابق';
@@ -1098,7 +1104,8 @@
                             email: fallbackEmail,
                             score: 0,
                             avatarConfig: currentConfig,
-                            avatarSnapshot: null
+                            avatarSnapshot: null,
+                            isKicked: false
                         };
                         await setDoc(doc(usersRef, user.uid), newDocData);
                         userData = newDocData;
@@ -1145,7 +1152,13 @@
 
                 // Update my score
                 const me = allUsers.find(u => u.uid === currentUser.uid);
-                if(me) document.getElementById('current-user-score').textContent = me.score || 0;
+                if(me) {
+                    document.getElementById('current-user-score').textContent = me.score || 0;
+                    if(me.isKicked && document.getElementById('studio-screen').classList.contains('active')) {
+                        // Alert if they get kicked while in studio
+                        showToast("تم إيقاف حسابك من الإدارة للتو.", true);
+                    }
+                }
 
             }, (error) => {
                 console.error("Error fetching users:", error);
@@ -1176,6 +1189,14 @@
             }
 
             const btn = document.getElementById('btn-save-character');
+
+            // --- Check if kicked before allowing save ---
+            const me = allUsers.find(u => u.uid === currentUser.uid);
+            if (me && me.isKicked) {
+                showToast("عذراً، لا يمكنك الحفظ لأنه تم إبعادك من المسابقة بواسطة الإدارة.", true);
+                return;
+            }
+
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i> جاري الحفظ...';
 
@@ -1192,7 +1213,8 @@
                 // Using setDoc with merge:true is safer than updateDoc to avoid "document not found" errors
                 await setDoc(doc(usersRef, currentUser.uid), {
                     avatarConfig: currentConfig,
-                    avatarSnapshot: snapshotBase64
+                    avatarSnapshot: snapshotBase64,
+                    isKicked: false // In case they were fine
                 }, { merge: true });
                 
                 showScreen('main-screen');
@@ -1219,9 +1241,11 @@
             const grid = document.getElementById('leaderboard-grid');
             grid.innerHTML = '';
             
-            allUsers.forEach((user, index) => {
-                if(!user.avatarSnapshot) return; // Skip if no avatar yet
-                
+            // Filter out users who haven't saved their avatar OR are kicked
+            // This ensures the Rank (Index) displayed is accurate!
+            const validUsers = allUsers.filter(u => u.avatarSnapshot && !u.isKicked);
+
+            validUsers.forEach((user, index) => {
                 const isMe = user.uid === currentUser?.uid;
                 const emailStr = user.email || 'متسابق';
                 const emailName = emailStr.includes('@') ? emailStr.split('@')[0] : emailStr;
@@ -1229,7 +1253,7 @@
                 const card = document.createElement('div');
                 card.className = `leaderboard-item glass-panel rounded-2xl p-4 flex flex-col items-center relative ${isMe ? 'ring-4 ring-amber-500 bg-amber-50' : ''}`;
                 
-                // Rank Badge
+                // Rank Badge - using the filtered index + 1 for accurate placement
                 const rankColor = index === 0 ? 'bg-yellow-400 text-yellow-900' : (index === 1 ? 'bg-gray-300 text-gray-800' : (index === 2 ? 'bg-amber-700 text-white' : 'bg-white/80 text-gray-600'));
                 card.innerHTML = `
                     <div class="absolute -top-3 -right-3 w-8 h-8 rounded-full ${rankColor} font-bold flex justify-center items-center shadow-md border-2 border-white z-10">
@@ -1288,16 +1312,44 @@
 
         // Admin Actions
         window.adminAddPoints = async (uid, pts) => {
-            const user = allUsers.find(u => u.uid === uid);
-            if(user) {
-                await updateDoc(doc(usersRef, uid), { score: (user.score || 0) + pts });
-                showToast("تم تحديث النقاط بنجاح");
+            try {
+                const user = allUsers.find(u => u.uid === uid);
+                if(user) {
+                    const newScore = (user.score || 0) + pts;
+                    // استخدام setDoc مع الدمج (merge) لتجنب أخطاء عدم وجود الحقل
+                    await setDoc(doc(usersRef, uid), { score: newScore }, { merge: true });
+                    showToast(`تم تحديث النقاط بنجاح: ${newScore}`);
+                }
+            } catch (err) {
+                console.error("Points Update Error:", err);
+                showToast("حدث خطأ! تأكد من صلاحيات قاعدة البيانات (Rules)", true);
             }
         };
 
+        // NEW: Permanent Kick logic
         window.adminKick = async (uid) => {
-            await deleteDoc(doc(usersRef, uid));
-            showToast("تم إزالة المستخدم من اللوحة");
+            if(confirm("هل أنت متأكد من طرد هذا المتسابق؟ (سيختفي من اللوحة ولن يتمكن من حفظ شخصيته مجدداً)")) {
+                try {
+                    await setDoc(doc(usersRef, uid), { isKicked: true, avatarSnapshot: null }, { merge: true });
+                    showToast("تم طرد المتسابق وإبعاده");
+                } catch(err) {
+                    console.error("Kick Error:", err);
+                    showToast("حدث خطأ أثناء الطرد", true);
+                }
+            }
+        };
+
+        // NEW: Restore user logic
+        window.adminRestore = async (uid) => {
+            if(confirm("هل تريد استرجاع هذا المتسابق والسماح له باللعب مجدداً؟")) {
+                try {
+                    await setDoc(doc(usersRef, uid), { isKicked: false }, { merge: true });
+                    showToast("تم استرجاع المتسابق بنجاح");
+                } catch(err) {
+                    console.error("Restore Error:", err);
+                    showToast("حدث خطأ أثناء الاسترجاع", true);
+                }
+            }
         };
 
         document.getElementById('btn-save-broadcast').addEventListener('click', async () => {
@@ -1316,19 +1368,29 @@
                 const tr = document.createElement('tr');
                 const emailStr = user.email || 'متسابق';
                 const emailName = emailStr.includes('@') ? emailStr.split('@')[0] : emailStr;
-                const statusBadge = !user.avatarSnapshot ? `<br><span class="text-[10px] text-red-500 bg-red-50 px-1 rounded border border-red-200">لم يكمل الشخصية</span>` : '';
                 
+                let statusBadge = '';
+                if (user.isKicked) {
+                    statusBadge = `<br><span class="text-[10px] text-white bg-red-600 px-1 rounded">مطرود (موقوف)</span>`;
+                } else if (!user.avatarSnapshot) {
+                    statusBadge = `<br><span class="text-[10px] text-red-500 bg-red-50 px-1 rounded border border-red-200">لم يكمل الشخصية</span>`;
+                }
+                
+                const actionBtn = user.isKicked 
+                    ? `<button onclick="adminRestore('${user.uid}')" class="bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700">استرجاع</button>`
+                    : `<button onclick="adminKick('${user.uid}')" class="bg-gray-800 text-white px-3 py-1 rounded text-xs hover:bg-black">طرد</button>`;
+
                 tr.innerHTML = `
                     <td class="p-3 font-medium" dir="ltr">${emailName}${statusBadge}<br><span class="text-xs text-gray-400">${user.uid}</span></td>
                     <td class="p-3 text-center font-bold text-lg">${user.score || 0}</td>
                     <td class="p-3 text-center space-x-1 space-x-reverse">
-                        <button onclick="adminAddPoints('${user.uid}', 5)" class="bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200">+5</button>
-                        <button onclick="adminAddPoints('${user.uid}', 1)" class="bg-green-50 text-green-600 px-2 py-1 rounded hover:bg-green-100">+1</button>
-                        <button onclick="adminAddPoints('${user.uid}', -1)" class="bg-red-50 text-red-600 px-2 py-1 rounded hover:bg-red-100">-1</button>
-                        <button onclick="adminAddPoints('${user.uid}', -5)" class="bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200">-5</button>
+                        <button onclick="adminAddPoints('${user.uid}', 5)" class="bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200" ${user.isKicked ? 'disabled' : ''}>+5</button>
+                        <button onclick="adminAddPoints('${user.uid}', 1)" class="bg-green-50 text-green-600 px-2 py-1 rounded hover:bg-green-100" ${user.isKicked ? 'disabled' : ''}>+1</button>
+                        <button onclick="adminAddPoints('${user.uid}', -1)" class="bg-red-50 text-red-600 px-2 py-1 rounded hover:bg-red-100" ${user.isKicked ? 'disabled' : ''}>-1</button>
+                        <button onclick="adminAddPoints('${user.uid}', -5)" class="bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200" ${user.isKicked ? 'disabled' : ''}>-5</button>
                     </td>
                     <td class="p-3 text-center">
-                        <button onclick="adminKick('${user.uid}')" class="bg-gray-800 text-white px-3 py-1 rounded text-xs hover:bg-black">إزالة (Kick)</button>
+                        ${actionBtn}
                     </td>
                 `;
                 tbody.appendChild(tr);
