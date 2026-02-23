@@ -1090,6 +1090,19 @@
                         userData = docSnap.data();
                         if(userData.avatarConfig) currentConfig = userData.avatarConfig;
                         document.getElementById('current-user-score').textContent = userData.score || 0;
+                    } else {
+                        // Self-healing: Create missing document if auth exists but DB doc failed to create previously
+                        const fallbackEmail = user.email || document.getElementById('email').value.trim() || 'متسابق';
+                        const newDocData = {
+                            uid: user.uid,
+                            email: fallbackEmail,
+                            score: 0,
+                            avatarConfig: currentConfig,
+                            avatarSnapshot: null
+                        };
+                        await setDoc(doc(usersRef, user.uid), newDocData);
+                        userData = newDocData;
+                        isFirstTime = true; // Force into studio
                     }
                 } catch (dbErr) {
                     console.error("Firestore read error:", dbErr);
@@ -1210,7 +1223,8 @@
                 if(!user.avatarSnapshot) return; // Skip if no avatar yet
                 
                 const isMe = user.uid === currentUser?.uid;
-                const emailName = user.email.split('@')[0];
+                const emailStr = user.email || 'متسابق';
+                const emailName = emailStr.includes('@') ? emailStr.split('@')[0] : emailStr;
                 
                 const card = document.createElement('div');
                 card.className = `leaderboard-item glass-panel rounded-2xl p-4 flex flex-col items-center relative ${isMe ? 'ring-4 ring-amber-500 bg-amber-50' : ''}`;
@@ -1300,8 +1314,12 @@
             
             allUsers.forEach(user => {
                 const tr = document.createElement('tr');
+                const emailStr = user.email || 'متسابق';
+                const emailName = emailStr.includes('@') ? emailStr.split('@')[0] : emailStr;
+                const statusBadge = !user.avatarSnapshot ? `<br><span class="text-[10px] text-red-500 bg-red-50 px-1 rounded border border-red-200">لم يكمل الشخصية</span>` : '';
+                
                 tr.innerHTML = `
-                    <td class="p-3 font-medium" dir="ltr">${user.email.split('@')[0]}<br><span class="text-xs text-gray-400">${user.uid}</span></td>
+                    <td class="p-3 font-medium" dir="ltr">${emailName}${statusBadge}<br><span class="text-xs text-gray-400">${user.uid}</span></td>
                     <td class="p-3 text-center font-bold text-lg">${user.score || 0}</td>
                     <td class="p-3 text-center space-x-1 space-x-reverse">
                         <button onclick="adminAddPoints('${user.uid}', 5)" class="bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200">+5</button>
